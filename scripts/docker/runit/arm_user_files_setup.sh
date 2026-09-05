@@ -14,23 +14,32 @@ DEFAULT_UID=1000
 DEFAULT_GID=1000
 
 
-# Function to check if the ARM user has ownership of the requested folder
-check_folder_ownership() {
-    local check_dir="$1"  # Get the folder path from the first argument
-    local folder_uid=$(stat -c "%u" "$check_dir")
-    local folder_gid=$(stat -c "%g" "$check_dir")
+# Function to ensure ARM owns a mounted folder (auto-fix when privileged)
+ensure_folder_ownership() {
+    local check_dir="$1"
+    local folder_uid
+    local folder_gid
+    folder_uid=$(stat -c "%u" "$check_dir")
+    folder_gid=$(stat -c "%g" "$check_dir")
 
     echo "Checking ownership of $check_dir"
 
     if [ "$folder_uid" != "$ARM_UID" ] || [ "$folder_gid" != "$ARM_GID" ]; then
-        echo "---------------------------------------------"
-        echo "[ERROR]: ARM does not have permissions to $check_dir using $ARM_UID:$ARM_GID"
-        echo "Check your user permissions and restart ARM. Folder permissions--> $folder_uid:$folder_gid"
-        echo "---------------------------------------------"
-        exit 1
+        echo "[WARN]: $check_dir owned by $folder_uid:$folder_gid, expected $ARM_UID:$ARM_GID"
+        echo "         Attempting to fix ownership (container is typically privileged)..."
+        if chown -R "${ARM_UID}:${ARM_GID}" "$check_dir"; then
+            echo "[OK]: Fixed ownership of $check_dir -> $ARM_UID:$ARM_GID"
+        else
+            echo "---------------------------------------------"
+            echo "[ERROR]: ARM does not have permissions to $check_dir using $ARM_UID:$ARM_GID"
+            echo "On the host run: sudo chown -R \$(id -u):\$(id -g) ./data"
+            echo "Folder permissions--> $folder_uid:$folder_gid"
+            echo "---------------------------------------------"
+            exit 1
+        fi
+    else
+        echo "[OK]: ARM UID and GID set correctly, ARM has access to '$check_dir' using $ARM_UID:$ARM_GID"
     fi
-
-    echo "[OK]: ARM UID and GID set correctly, ARM has access to '$check_dir' using $ARM_UID:$ARM_GID"
 }
 
 ### Setup User
@@ -56,7 +65,7 @@ usermod -a -G render arm
 chown -R arm:arm /opt/arm
 
 # Check ownership of the ARM home folder
-check_folder_ownership "/home/arm"
+ensure_folder_ownership "/home/arm"
 
 # setup needed/expected dirs if not found
 SUBDIRS="media media/completed media/raw media/movies media/transcode logs logs/progress db music .MakeMKV"
@@ -78,7 +87,7 @@ fi
 
 ##### Setup ARM-specific config files if not found
 # Check ownership of the ARM config folder
-check_folder_ownership "/etc/arm/config"
+ensure_folder_ownership "/etc/arm/config"
 
 mkdir -p /etc/arm/config
 CONFS="arm.yaml apprise.yaml"
