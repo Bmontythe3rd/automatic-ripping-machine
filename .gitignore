@@ -184,3 +184,5 @@ removed/*
 
 arm.yaml
 .tools/
+data/
+docker-compose.override.yml
