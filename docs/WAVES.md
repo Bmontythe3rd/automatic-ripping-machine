@@ -77,6 +77,7 @@ Or as Admin: Users → Clear 2FA for that account.
 - `/account` — enable/disable 2FA (QR via `qrcode`)
 - `/users` — Admin create/disable/reset password/clear 2FA
 - Settings + Database routes require **Admin**; Operators keep home/rips/history/logs/jobs
-- Deps: `pyotp`, `qrcode` in `requirements.txt`
+- Deps: `pyotp`, `qrcode`, `Pillow` installed in the Docker image (`Dockerfile` `pip3 install`) — the base image does not install root `requirements.txt`
+- UI auto-migrates Alembic on startup when the DB revision is behind
 
-**After upgrade:** open Settings once (or let DB migrate) so Alembic runs; existing `admin` becomes Admin.
+**After upgrade:** rebuild with `--build` so pip packages install. Default `admin` / `password` becomes Admin.

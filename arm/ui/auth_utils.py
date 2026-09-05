@@ -2,9 +2,19 @@
 from functools import wraps
 import secrets
 import bcrypt
-import pyotp
 from flask import redirect, flash, session
 from flask_login import current_user, login_required
+
+
+def _pyotp():
+    try:
+        import pyotp
+        return pyotp
+    except ImportError as err:
+        raise RuntimeError(
+            "pyotp is not installed. Rebuild the Docker image "
+            "(pip install pyotp) to enable 2FA."
+        ) from err
 
 
 def admin_required(view):
@@ -20,21 +30,21 @@ def admin_required(view):
 
 
 def generate_totp_secret():
-    return pyotp.random_base32()
+    return _pyotp().random_base32()
 
 
 def totp_uri(secret, username, issuer="ARM"):
-    return pyotp.TOTP(secret).provisioning_uri(name=username, issuer_name=issuer)
+    return _pyotp().TOTP(secret).provisioning_uri(name=username, issuer_name=issuer)
 
 
 def verify_totp(secret, token):
     if not secret or not token:
         return False
-    return pyotp.TOTP(secret).verify(token.strip().replace(" ", ""), valid_window=1)
+    return _pyotp().TOTP(secret).verify(token.strip().replace(" ", ""), valid_window=1)
 
 
 def generate_backup_codes(count=8):
-    """Return (plaintext_codes, bcrypt_hashes)."""
+    """Return (plaintext_codes, bcrypt hashes)."""
     codes = []
     hashes = []
     for _ in range(count):

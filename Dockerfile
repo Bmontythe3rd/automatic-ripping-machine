@@ -72,6 +72,9 @@ FROM base AS automatic-ripping-machine
 # Copy over source code
 COPY . /opt/arm/
 
+# Fork extras not in arm-dependencies base image (Waves 5–7)
+RUN pip3 install --no-cache-dir 'pyotp==2.9.0' 'qrcode==8.2' 'Pillow'
+
 # Our docker udev rule
 RUN ln -sv /opt/arm/setup/51-docker-arm.rules /lib/udev/rules.d/
 
