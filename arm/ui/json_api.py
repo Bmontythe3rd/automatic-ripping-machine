@@ -480,7 +480,6 @@ def abandon_job(job_id):
         'job': job_id,
         'mode': 'abandon'
     }
-    job = None
     if not job_id_validator(job_id):
         notification = Notifications(f"Job: {job_id} isn't a valid job!",
                                      f'Job with id: {job_id} doesnt match anything in the database')
@@ -488,24 +487,25 @@ def abandon_job(job_id):
         db.session.commit()
         return json_return
 
-    # Kill the process id
     job = Job.query.get(int(job_id))
     job.status = JobState.FAILURE.value
     try:
         terminate_process(job.pid)
+        try:
+            job.eject()
+        except Exception as eject_err:  # noqa: BLE001
+            app.logger.warning("Abandoned job %s but eject failed: %s", job_id, eject_err)
+        json_return['success'] = True
+        title = f"Job: {job_id} was Abandoned!"
+        message = f'Job with id: {job_id} was successfully abandoned. No files were deleted!'
+        notification = Notifications(title, message)
     except Exception as err:
-        db.session.rollback()
+        # Still persist failure status — leaving jobs "active" is worse than a stuck process
         json_return["Error"] = str(err)
         json_return['success'] = False
-        title = f"Job ERROR: {job.pid} couldn't be abandoned."
+        title = f"Job ERROR: {job_id} couldn't fully abandon."
         message = json_return['Error']
-        app.logger.debug(f"{title} - Reverting db changes - {message}")
-        notification = Notifications(title, message)
-    else:
-        job.eject()  # only release/eject the job if the process got killed.
-        json_return['success'] = True
-        title = f"Job: {job.pid} was Abandoned!"
-        message = f'Job with id: {job.pid} was successfully abandoned. No files were deleted!'
+        app.logger.error("%s - %s", title, message)
         notification = Notifications(title, message)
     db.session.add(notification)
     db.session.commit()
@@ -514,7 +514,7 @@ def abandon_job(job_id):
 
 def terminate_process(pid):
     """
-    Terminates the process associated with a given pid.
+    Terminate a ripper process and its children (MakeMKV/HandBrake/ffmpeg).
     :param pid: Process ID (int)
     :raises: ValueError if access is denied
     """
@@ -524,7 +524,24 @@ def terminate_process(pid):
         return
     try:
         job_process = psutil.Process(pid)
-        job_process.terminate()  # or job_process.kill()
+        # Kill children first so MakeMKV/HandBrake do not outlive the parent
+        children = job_process.children(recursive=True)
+        for child in children:
+            try:
+                child.terminate()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+        job_process.terminate()
+        gone, alive = psutil.wait_procs(children + [job_process], timeout=5)
+        for proc in alive:
+            try:
+                proc.kill()
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                pass
+        app.logger.debug(
+            "Terminated job PID %s (%d children; %d force-killed)",
+            pid, len(children), len(alive)
+        )
     except psutil.NoSuchProcess:
         message = f"Process id {pid} was not found. Job has already been terminated."
         app.logger.warning(message)
@@ -533,8 +550,6 @@ def terminate_process(pid):
         message = f"Access denied abandoning job: {pid}!"
         app.logger.error(message)
         raise ValueError(message) from err
-    else:
-        app.logger.debug(f"Job with PID {pid} was terminated.")
 
 
 def change_job_params(config_id):

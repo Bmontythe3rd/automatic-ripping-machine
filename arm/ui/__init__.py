@@ -1,14 +1,18 @@
 """Main arm ui file"""
+import secrets
 import sys  # noqa: F401
 import os  # noqa: F401
 from getpass import getpass  # noqa: F401
 from logging.config import dictConfig
+from pathlib import Path
 from flask import Flask, logging, current_app  # noqa: F401
 from flask.logging import default_handler  # noqa: F401
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS
 from flask_wtf import CSRFProtect
+from sqlalchemy import event
+from sqlalchemy.engine import Engine
 from arm.ripper.logger import short_format
 
 from flask_login import LoginManager
@@ -16,6 +20,32 @@ import bcrypt  # noqa: F401
 import arm.config.config as cfg
 
 sqlitefile = 'sqlite:///' + cfg.arm_config['DBFILE']
+
+
+def _load_or_create_secret_key():
+    """Persist a per-install Flask secret; override with ARM_SECRET_KEY."""
+    env_key = os.environ.get("ARM_SECRET_KEY")
+    if env_key:
+        return env_key
+    db_path = Path(cfg.arm_config["DBFILE"])
+    secret_path = db_path.parent / ".arm_secret_key"
+    try:
+        if secret_path.is_file():
+            key = secret_path.read_text(encoding="utf-8").strip()
+            if key:
+                return key
+        key = secrets.token_hex(32)
+        secret_path.parent.mkdir(parents=True, exist_ok=True)
+        secret_path.write_text(key + "\n", encoding="utf-8")
+        try:
+            os.chmod(secret_path, 0o600)
+        except OSError:
+            pass
+        return key
+    except OSError:
+        # Fall back to an ephemeral key if the db dir is not writable
+        return secrets.token_hex(32)
+
 
 # Setup logging, but because of werkzeug issues, we need to set up that later down file
 dictConfig({
@@ -50,17 +80,34 @@ login_manager.init_app(app)
 # Set Flask database connection configurations
 app.config['SQLALCHEMY_DATABASE_URI'] = sqlitefile
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-# We should really generate a key for each system
-app.config['SECRET_KEY'] = "Big secret key"  # TODO: make this random!
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "connect_args": {"timeout": 30},
+}
+app.config['SECRET_KEY'] = _load_or_create_secret_key()
 # Set the global Flask Login state, set to True will ignore any @login_required
 app.config['LOGIN_DISABLED'] = cfg.arm_config['DISABLE_LOGIN']
 app.logger.debug(f"Disable Login: {cfg.arm_config['DISABLE_LOGIN']}")
-# Set debug pin as it is hidden normally
-os.environ["WERKZEUG_DEBUG_PIN"] = "12345"  # make this random!
-app.logger.debug("Debugging pin: " + os.environ["WERKZEUG_DEBUG_PIN"])
+# Hide werkzeug console PIN unless explicitly provided
+if "WERKZEUG_DEBUG_PIN" not in os.environ:
+    os.environ["WERKZEUG_DEBUG_PIN"] = "off"
 
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
+
+
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, connection_record):
+    """Reduce SQLite lock errors under concurrent UI + ripper writers."""
+    if connection_record.dialect.name != "sqlite":
+        return
+    cursor = dbapi_connection.cursor()
+    try:
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.execute("PRAGMA busy_timeout=30000")
+        cursor.execute("PRAGMA synchronous=NORMAL")
+    finally:
+        cursor.close()
+
 
 # Register route blueprints
 # loaded post database declaration to avoid circular loops

@@ -15,6 +15,7 @@ import pyudev
 
 from arm.models import SystemDrives
 from arm.ui import app, db
+from arm.ui.settings.drive_identity import resolve_drive_identity
 
 
 class MaskSerialMeta(type):
@@ -87,6 +88,10 @@ class DriveInformation:
     def __post_init__(self):
         self.maker = self._decode(self.maker)
         self.model = self._decode(self.model)
+        self.serial = self._decode(self.serial)
+        self.serial_id, _ = resolve_drive_identity(
+            self.mount, self.maker, self.model, self.serial, self.serial_id
+        )
 
 
 DRIVE_INFORMATION_EXTENDED = (
@@ -268,9 +273,13 @@ def drives_update(startup=False):
             msg = "Create a new drive entity in the database for '%s' on '%s'."
             app.logger.debug(msg, drive.serial_id, drive.mount)
             db_drive = SystemDrives()
-            db_drive.name = drive.serial_id
             db.session.add(db_drive)
         db_drive.update(drive)
+        # name is NOT NULL — never leave it empty (common when udev omits serial)
+        if not db_drive.name:
+            _, db_drive.name = resolve_drive_identity(
+                drive.mount, drive.maker, drive.model, drive.serial, drive.serial_id
+            )
         db.session.commit()  # needed to get drive_id for new entities
         db_drive.debug(logger=app.logger)
 
