@@ -27,7 +27,9 @@ class TestHwTranscode(unittest.TestCase):
             hw.preferred_vendor({"nvidia": False, "intel": True, "amd": True}),
             "intel",
         )
-        self.assertIsNone(hw.preferred_vendor({"nvidia": False, "intel": False, "amd": False}))
+        self.assertIsNone(
+            hw.preferred_vendor({"nvidia": False, "intel": False, "amd": False})
+        )
 
     def test_resolve_presets_software(self):
         preset = hw.resolve_presets("dvd", "HQ 720p30 Surround", False)
@@ -46,6 +48,11 @@ class TestHwTranscode(unittest.TestCase):
             status = hw.check_hw_transcode_support("HandBrakeCLI")
         self.assertTrue(status["nvidia"])
         self.assertFalse(status["intel"])
+
+    def test_config_truthy(self):
+        self.assertTrue(hw.config_truthy("true"))
+        self.assertTrue(hw.config_truthy(True))
+        self.assertFalse(hw.config_truthy("false"))
 
 
 if __name__ == "__main__":
