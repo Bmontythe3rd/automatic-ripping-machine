@@ -1,0 +1,45 @@
+# Docker Compose for Automatic Ripping Machine (fork)
+#
+# Usage:
+#   mkdir -p ~/arm/{config,logs,media,music}
+#   cp setup/arm.yaml ~/arm/config/arm.yaml   # first run only
+#   cp setup/apprise.yaml ~/arm/config/apprise.yaml
+#   cp setup/.abcde.conf ~/arm/config/abcde.conf
+#   # edit devices: below to match `ls /dev/sr*`
+#   docker compose up -d
+#
+# The /run/udev and /dev/disk mounts fix incomplete udev property population
+# inside the container (drive serial / media detection).
+
+services:
+  arm:
+    image: automaticrippingmachine/automatic-ripping-machine:latest
+    # For local builds from this fork:
+    # build: .
+    # image: arm-fork:local
+    container_name: arm-rippers
+    restart: unless-stopped
+    privileged: true
+    ports:
+      - "8080:8080"
+    environment:
+      - ARM_UID=${ARM_UID:-1000}
+      - ARM_GID=${ARM_GID:-1000}
+      - TZ=${TZ:-UTC}
+      # Optional: persist Flask secret across recreates
+      # - ARM_SECRET_KEY=change-me
+    volumes:
+      - ${ARM_HOME:-./data}/home:/home/arm
+      - ${ARM_HOME:-./data}/config:/etc/arm/config
+      - ${ARM_HOME:-./data}/logs:/home/arm/logs
+      - ${ARM_HOME:-./data}/media:/home/arm/media
+      - ${ARM_HOME:-./data}/music:/home/arm/music
+      # Host udev db — required for reliable optical drive detection in Docker
+      - /run/udev:/run/udev:ro
+      - /dev/disk:/dev/disk:ro
+    devices:
+      - /dev/sr0:/dev/sr0
+      # Uncomment additional drives as needed:
+      # - /dev/sr1:/dev/sr1
+    # Optional: pin CPUs for HandBrake/MakeMKV
+    # cpuset: "0-3"

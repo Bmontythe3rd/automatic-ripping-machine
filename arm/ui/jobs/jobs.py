@@ -224,6 +224,8 @@ def updatetitle():
     job.poster_url = job.poster_url_manual = request.args.get('poster')
 
     job.hasnicetitle = True
+    # Signal the ripper wait loop to stop and proceed with the corrected title
+    job.updated = True
     notification = Notifications(f"Job: {job.job_id} was updated",
                                  f'Title: {old_title} ({old_year}) was updated to '
                                  f'{request.args.get("title")} ({request.args.get("year")})')

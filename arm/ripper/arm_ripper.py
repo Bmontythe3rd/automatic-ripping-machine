@@ -213,28 +213,31 @@ def move_files_post(transcode_out_path, job):
 
 def rip_with_mkv(current_job, protection=0):
     """
-    Test to check if title was or should be ripped by MakeMKV\n
+    Decide whether MakeMKV should rip before HandBrake/ffmpeg.
+
+    Prefer MakeMKV for DVD/Blu-ray whenever RIPMETHOD implies it. HandBrake
+    reading the optical device directly (MAINFEATURE + DVD) is unreliable on
+    protected discs and was a common "title search then no rip" failure mode.
+
     :param current_job: current job
     :param protection: If the disc have 99 track protection
     :return: Bool
     """
-    mkv_ripped = False
-    # Rip bluray
     if current_job.disctype == "bluray":
-        mkv_ripped = True
-    # Rip dvd with mode: mkv and mainfeature: false
-    if current_job.disctype == "dvd" and (not current_job.config.MAINFEATURE and current_job.config.RIPMETHOD == "mkv"):
-        mkv_ripped = True
-    # Rip dvds with skip transcode
-    if current_job.disctype == "dvd" and current_job.config.SKIP_TRANSCODE:
-        mkv_ripped = True
-    # If dvd has 99 protection force MakeMKV to be used
-    if protection and current_job.disctype == "dvd":
-        mkv_ripped = True
-    # if backup_dvd, always use mkv
-    if current_job.config.RIPMETHOD == "backup_dvd":
-        mkv_ripped = True
-    return mkv_ripped
+        return True
+
+    if current_job.disctype != "dvd":
+        return False
+
+    if protection:
+        return True
+    if current_job.config.SKIP_TRANSCODE:
+        return True
+    if current_job.config.RIPMETHOD in ("mkv", "backup", "backup_dvd"):
+        return True
+
+    # Legacy path: MAINFEATURE DVD with an unknown RIPMETHOD → HandBrake-from-device
+    return False
 
 
 def skip_transcode_movie(files, job, raw_path):

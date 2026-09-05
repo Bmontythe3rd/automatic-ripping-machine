@@ -899,9 +899,10 @@ def check_for_wait(job):
             time.sleep(5)
             sleep_time += 5
             db.session.refresh(job)
-            if job.title_manual:
+            # title_manual is set by title search / custom title; updated is the
+            # explicit "user corrected identity" flag
+            if job.title_manual or job.updated:
                 logging.info("Manual override found.  Overriding auto identification values.")
-                job.updated = True
                 job.hasnicetitle = True
                 database_updater({"hasnicetitle": True, "updated": True}, job)
                 break
