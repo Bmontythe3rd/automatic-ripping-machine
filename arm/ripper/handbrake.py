@@ -217,6 +217,8 @@ def correct_hb_settings(job):
     :param job: The job
     :return: Correct preset and string arguments from A.R.M config
     """
+    from arm.ripper import hw_transcode
+
     hb_args = ""
     hb_preset = ""
     if job.disctype == "dvd":
@@ -225,6 +227,17 @@ def correct_hb_settings(job):
     elif job.disctype == "bluray":
         hb_args = job.config.HB_ARGS_BD
         hb_preset = job.config.HB_PRESET_BD
+
+    hw_auto = hw_transcode.config_truthy(
+        getattr(job.config, "HB_HW_AUTO", None)
+    ) or hw_transcode.config_truthy(cfg.arm_config.get("HB_HW_AUTO", False))
+    handbrake_cli = cfg.arm_config.get("HANDBRAKE_CLI", "HandBrakeCLI")
+    hb_preset = hw_transcode.resolve_presets(
+        job.disctype,
+        hb_preset,
+        hw_auto,
+        handbrake_cli=handbrake_cli,
+    )
     return hb_args, hb_preset
 
 

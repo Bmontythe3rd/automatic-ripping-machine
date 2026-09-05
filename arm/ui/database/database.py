@@ -10,6 +10,7 @@ import os
 import json
 import re
 from flask_login import LoginManager, login_required  # noqa: F401
+from arm.ui.auth_utils import admin_required
 from flask import render_template, request, Blueprint, flash, redirect, session
 
 import arm.ui.utils as ui_utils
@@ -29,7 +30,7 @@ armui_cfg = ui_utils.arm_db_cfg()
 
 
 @route_database.route('/database')
-@login_required
+@admin_required
 def view_database():
     """
     The main database page
@@ -90,7 +91,7 @@ def update_database():
 
 
 @route_database.route('/import_movies')
-@login_required
+@admin_required
 def import_movies():
     """
     Function for finding all movies not currently tracked by ARM in the COMPLETED_PATH

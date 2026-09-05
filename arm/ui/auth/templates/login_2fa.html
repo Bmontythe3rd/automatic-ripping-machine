@@ -1,0 +1,23 @@
+{% extends "support/base_simple.html" %}
+
+{% block content %}
+<div class="arm-login-page">
+    <div class="arm-login-card">
+        <div class="arm-login-brand">
+            <h1>Two-factor authentication</h1>
+            <p>Enter a code for <strong>{{ username }}</strong></p>
+        </div>
+        <form method="post" action="">
+            {{ form.hidden_tag() }}
+            <label class="arm-label" for="token">Authenticator or backup code</label>
+            <input id="token" type="text" class="form-control" name="token"
+                   autocomplete="one-time-code" inputmode="numeric" autofocus>
+            {% for error in form.token.errors %}
+                <div class="text-danger">{{ error }}</div>
+            {% endfor %}
+            <button class="btn btn-primary btn-lg btn-block" type="submit">Verify</button>
+        </form>
+        <p class="text-center mt-3 mb-0"><a href="/login">Back to login</a></p>
+    </div>
+</div>
+{% endblock %}

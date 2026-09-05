@@ -233,6 +233,10 @@ HB_PRESET_DVD: "HQ 720p30 Surround"
 # Execute "HandBrakeCLI -z" to see a list of all presets
 HB_PRESET_BD: "HQ 1080p30 Surround"
 
+# When true, ARM picks NVIDIA NVENC / Intel QSV / AMD VCN presets automatically
+# when HandBrake reports them. Manual HB_PRESET_* still used as software fallback.
+HB_HW_AUTO: true
+
 # Extension of the final video file
 DEST_EXT: mkv
 

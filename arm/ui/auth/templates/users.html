@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="arm-page-hero">
+    <h1>Users</h1>
+    <p>Admin-only account management.</p>
+</header>
+
+<div class="arm-panel mb-4">
+    <h2 class="h5 mb-3">Create user</h2>
+    <form method="post" class="arm-search-form" style="max-width: none; box-shadow: none; border: none; padding: 0; background: transparent;">
+        {{ form.hidden_tag() }}
+        <div class="form-row">
+            <div class="form-group col-md-4">
+                <label class="arm-label">Username</label>
+                {{ form.username(class="form-control") }}
+            </div>
+            <div class="form-group col-md-4">
+                <label class="arm-label">Password</label>
+                {{ form.password(class="form-control") }}
+            </div>
+            <div class="form-group col-md-2">
+                <label class="arm-label">Role</label>
+                {{ form.role(class="form-control") }}
+            </div>
+            <div class="form-group col-md-2 d-flex align-items-end">
+                <button class="btn btn-primary btn-block" type="submit">Create</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="arm-panel">
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+            <tr>
+                <th>ID</th>
+                <th>Username</th>
+                <th>Role</th>
+                <th>2FA</th>
+                <th>Active</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.user_id }}</td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.role or 'admin' }}</td>
+                <td>{% if u.totp_enabled %}on{% else %}off{% endif %}</td>
+                <td>{% if u.is_active is sameas false %}disabled{% else %}yes{% endif %}</td>
+                <td class="text-nowrap">
+                    {% if u.is_active is sameas false %}
+                        <a class="btn btn-sm btn-secondary" href="users?action=enable&id={{ u.user_id }}">Enable</a>
+                    {% else %}
+                        {% if u.user_id != current_user.user_id %}
+                        <a class="btn btn-sm btn-secondary" href="users?action=disable&id={{ u.user_id }}">Disable</a>
+                        {% endif %}
+                    {% endif %}
+                    {% if u.user_id != current_user.user_id %}
+                    <a class="btn btn-sm btn-secondary" href="users?action=clear_2fa&id={{ u.user_id }}">Clear 2FA</a>
+                    <a class="btn btn-sm btn-secondary" href="users?action=reset_password&id={{ u.user_id }}">Reset PW</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+{% block js %}
+{{ super() }}
+<script>activeTab("users");</script>
+{% endblock %}

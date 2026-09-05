@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+
+{% block content %}
+<header class="arm-page-hero">
+    <h1>Account</h1>
+    <p>{{ user.email }} · role: {{ user.role or 'admin' }}</p>
+</header>
+
+{% if backup_codes %}
+<div class="arm-panel mb-4">
+    <h2 class="h5">Backup codes (save these now)</h2>
+    <p class="text-muted">Each code works once. Store them offline.</p>
+    <ul class="arm-mono">
+        {% for code in backup_codes %}
+        <li>{{ code }}</li>
+        {% endfor %}
+    </ul>
+</div>
+{% endif %}
+
+<div class="arm-panel mb-4">
+    <h2 class="h5">Two-factor authentication (TOTP)</h2>
+    {% if user.totp_enabled %}
+        <p><strong>Status:</strong> enabled</p>
+        <form method="post">
+            {{ form.hidden_tag() }}
+            <input type="hidden" name="action" value="disable_2fa">
+            <label class="arm-label" for="token-disable">Confirm with authenticator code</label>
+            <input id="token-disable" class="form-control mb-2" name="token" type="text" autocomplete="one-time-code">
+            <button class="btn btn-secondary" type="submit">Disable 2FA</button>
+        </form>
+    {% elif pending_secret %}
+        <p>Scan this QR code in your authenticator app, then enter a code to confirm.</p>
+        {% if qr_uri %}
+            <img src="{{ qr_uri }}" alt="2FA QR code" width="200" height="200" class="mb-3">
+        {% endif %}
+        <p class="arm-mono small">Secret: {{ pending_secret }}</p>
+        {% if otpauth %}<p class="small text-muted text-break">{{ otpauth }}</p>{% endif %}
+        <form method="post">
+            {{ form.hidden_tag() }}
+            <input type="hidden" name="action" value="confirm_2fa">
+            <label class="arm-label" for="token-confirm">Authenticator code</label>
+            <input id="token-confirm" class="form-control mb-2" name="token" type="text" autocomplete="one-time-code">
+            <button class="btn btn-primary" type="submit">Confirm and enable</button>
+        </form>
+    {% else %}
+        <p><strong>Status:</strong> off</p>
+        <form method="post">
+            {{ form.hidden_tag() }}
+            <input type="hidden" name="action" value="start_2fa">
+            <button class="btn btn-primary" type="submit">Set up 2FA</button>
+        </form>
+    {% endif %}
+</div>
+
+<p><a href="update_password">Change password</a></p>
+{% endblock %}

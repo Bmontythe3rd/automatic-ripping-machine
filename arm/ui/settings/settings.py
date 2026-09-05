@@ -27,6 +27,7 @@ from flask_login import login_required, \
     current_user, login_user, UserMixin, logout_user  # noqa: F401
 from flask import render_template, request, flash, \
     redirect, Blueprint, session, url_for
+from arm.ui.auth_utils import admin_required
 
 import arm.ui.utils as ui_utils
 from arm.ripper.ProcessHandler import arm_subprocess
@@ -64,7 +65,7 @@ route_settings.add_app_template_filter(mask_last, name='mask_last')
 
 
 @route_settings.route('/settings')
-@login_required
+@admin_required
 def settings():
     """
     Page - settings
@@ -145,71 +146,102 @@ def settings():
 
 
 def check_hw_transcode_support():
-    cmd = f"nice {cfg.arm_config['HANDBRAKE_CLI']}"
+    from arm.ripper.hw_transcode import check_hw_transcode_support as probe
 
-    app.logger.debug(f"Sending command: {cmd}")
-    hw_support_status = {
-        "nvidia": False,
-        "intel": False,
-        "amd": False
-    }
-    try:
-        hand_brake_output = arm_subprocess(f"{cmd}", shell=True, check=True)
-
-        # NVENC
-        if re.search(r'nvenc: version ([0-9\\.]+) is available', str(hand_brake_output)):
-            app.logger.info("NVENC supported!")
-            hw_support_status["nvidia"] = True
-        # Intel QuickSync
-        if re.search(r'qsv:\sis(.*?)available\son', str(hand_brake_output)):
-            app.logger.info("Intel QuickSync supported!")
-            hw_support_status["intel"] = True
-        # AMD VCN
-        if re.search(r'vcn:\sis(.*?)available\son', str(hand_brake_output)):
-            app.logger.info("AMD VCN supported!")
-            hw_support_status["amd"] = True
-        app.logger.info("Handbrake call successful")
-        app.logger.debug(hand_brake_output)
-    except subprocess.CalledProcessError:
-        pass
-    return hw_support_status
+    return probe(cfg.arm_config.get("HANDBRAKE_CLI", "HandBrakeCLI"))
 
 
 @route_settings.route('/save_settings', methods=['POST'])
-@login_required
+@admin_required
 def save_settings():
     """
     Page - save_settings
     Method - POST
     Overview - Save arm ripper settings from post. Not a user page
     """
-    # Load up the comments.json, so we can comment the arm.yaml
+    from arm.ui.settings_save import merge_arm_config_from_form, build_arm_cfg_from_dict
+
     comments = ui_utils.generate_comments()
     success = False
-    arm_cfg = {}
+    message = ""
     form = SettingsForm()
-    if form.validate_on_submit():
-        # Build the new arm.yaml with updated values from the user
-        arm_cfg = ui_utils.build_arm_cfg(request.form.to_dict(), comments)
-        # Save updated arm.yaml
+    # CSRF token must be present; do not require the incomplete path field set
+    if request.method == "POST" and form.csrf_token.data:
         try:
+            form_dict = request.form.to_dict()
+            merged = merge_arm_config_from_form(cfg.arm_config, form_dict)
+            arm_cfg = build_arm_cfg_from_dict(
+                merged, comments, form_order=list(form_dict.keys())
+            )
             with open(cfg.arm_config_path, "w") as settings_file:
                 settings_file.write(arm_cfg)
-                settings_file.close()
             success = True
             importlib.reload(cfg)
-            # Set the ARM Log level to the config
+            disable_login = cfg.arm_config.get("DISABLE_LOGIN", False)
+            if isinstance(disable_login, str):
+                disable_login = disable_login.strip().lower() in ("true", "1", "yes", "on")
+            app.config["LOGIN_DISABLED"] = bool(disable_login)
             app.logger.info(f"Setting log level to: {cfg.arm_config['LOGLEVEL']}")
-            app.logger.setLevel(cfg.arm_config['LOGLEVEL'])
+            app.logger.setLevel(cfg.arm_config["LOGLEVEL"])
+            message = "Ripper settings saved"
         except OSError as e:
-            # arm.yaml is read-only
             app.logger.error(f"{cfg.arm_config_path} is read-only", exc_info=e)
+            message = f"Cannot write {cfg.arm_config_path}: {e}"
+        except Exception as e:
+            app.logger.error("Failed to save ripper settings", exc_info=e)
+            message = str(e)
+    else:
+        message = "Missing CSRF token"
 
-    return {'success': success, 'settings': cfg.arm_config, 'form': 'arm ripper settings'}
+    return {
+        "success": success,
+        "settings": cfg.arm_config,
+        "form": "arm ripper settings",
+        "message": message,
+    }
+
+
+@route_settings.route('/apply_hw_presets', methods=['POST'])
+@admin_required
+def apply_hw_presets():
+    """Enable HB_HW_AUTO in arm.yaml (HW presets chosen at rip time)."""
+    from arm.ui.settings_save import merge_arm_config_from_form, build_arm_cfg_from_dict
+    from arm.ripper.hw_transcode import check_hw_transcode_support, preferred_vendor
+
+    form = SettingsForm()
+    success = False
+    message = ""
+    if request.method == "POST" and form.csrf_token.data:
+        try:
+            comments = ui_utils.generate_comments()
+            merged = merge_arm_config_from_form(
+                cfg.arm_config, {"HB_HW_AUTO": "true", "csrf_token": form.csrf_token.data}
+            )
+            merged["HB_HW_AUTO"] = "true"
+            hw = check_hw_transcode_support(merged.get("HANDBRAKE_CLI", "HandBrakeCLI"))
+            vendor = preferred_vendor(hw)
+            arm_cfg = build_arm_cfg_from_dict(merged, comments)
+            with open(cfg.arm_config_path, "w") as settings_file:
+                settings_file.write(arm_cfg)
+            importlib.reload(cfg)
+            success = True
+            if vendor:
+                message = f"HB_HW_AUTO enabled; detected {vendor}"
+            else:
+                message = (
+                    "HB_HW_AUTO enabled, but no HW encoder detected yet. "
+                    "Mount /dev/dri or NVIDIA GPUs and rebuild/restart."
+                )
+        except Exception as e:
+            app.logger.error("apply_hw_presets failed", exc_info=e)
+            message = str(e)
+    else:
+        message = "Missing CSRF token"
+    return {"success": success, "message": message, "form": "hardware encode"}
 
 
 @route_settings.route('/save_ui_settings', methods=['POST'])
-@login_required
+@admin_required
 def save_ui_settings():
     """
     Page - save_ui_settings
@@ -240,7 +272,7 @@ def save_ui_settings():
 
 
 @route_settings.route('/save_abcde_settings', methods=['POST'])
-@login_required
+@admin_required
 def save_abcde():
     """
     Page - save_abcde_settings
@@ -273,7 +305,7 @@ def save_abcde():
 
 
 @route_settings.route('/save_apprise_cfg', methods=['POST'])
-@login_required
+@admin_required
 def save_apprise_cfg():
     """
     Page - save_apprise_cfg
@@ -299,7 +331,7 @@ def save_apprise_cfg():
 
 
 @route_settings.route('/systeminfo', methods=['POST'])
-@login_required
+@admin_required
 def server_info():
     """
     Page - systeminfo
@@ -343,7 +375,7 @@ def system_drive_scan():
 
 
 @route_settings.route('/drive/eject/<eject_id>')
-@login_required
+@admin_required
 def drive_eject(eject_id):
     """
     Server System - change state of CD/DVD/BluRay drive - toggle eject status
@@ -367,7 +399,7 @@ def drive_eject(eject_id):
 
 
 @route_settings.route('/drive/remove/<remove_id>')
-@login_required
+@admin_required
 def drive_remove(remove_id):
     """
     Server System - remove a drive from the ARM UI
@@ -386,7 +418,7 @@ def drive_remove(remove_id):
 
 
 @route_settings.route('/drive/manual/<manual_id>')
-@login_required
+@admin_required
 def drive_manual(manual_id):
     """
     Manually start a job on ARM

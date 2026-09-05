@@ -114,13 +114,25 @@
                     url: sendTo,
                     data: formToSend.serialize()
                 }).done(function (data) {
+                    var dt = new Date();
+                    var time = `${dt.getHours()}:${dt.getMinutes()}:${dt.getSeconds()}`;
                     if (data.success === true) {
-                        console.log(data)
-                        var dt = new Date();
-                        var time = `${dt.getHours()}:${dt.getMinutes()}:${dt.getSeconds()}`;
                         addToast("Saved Successfully", `Saved ${data.form} settings at ${time}`, toastCount);
                         toastCount++;
+                        $("#fail").addClass("d-none");
+                        $("#success").removeClass("d-none");
+                    } else {
+                        var msg = (data && data.message) ? data.message : "Save failed";
+                        addToast("Save failed", msg, toastCount);
+                        toastCount++;
+                        $("#success").addClass("d-none");
+                        $("#fail").removeClass("d-none");
+                        $("#fail .alert-heading").text(msg);
                     }
+                }).fail(function (xhr) {
+                    addToast("Save failed", "Request error: " + xhr.status, toastCount);
+                    toastCount++;
+                    $("#fail").removeClass("d-none");
                 });
             }
 
@@ -128,10 +140,14 @@
                 e.preventDefault();
                 sendSettings($("#uiSettings"), "/save_ui_settings");
             });
-            $("#settings").submit(function (e) {
+            $("#ripperSettings").submit(function (e) {
                 e.preventDefault();
                 sendSettings($("#ripperSettings"), "/save_settings");
-            })
+            });
+            $("#hwEncodeForm").submit(function (e) {
+                e.preventDefault();
+                sendSettings($("#hwEncodeForm"), "/apply_hw_presets");
+            });
             $("#abcdeSettings").submit(function (e) {
                 e.preventDefault();
                 sendSettings($("#abcdeSettings"), "/save_abcde_settings");
@@ -142,8 +158,8 @@
             });
             $("#updateArm").submit(function (e) {
                 e.preventDefault();
-                sendSettings($("#updateArm"), "/update_arm")
-            })
+                sendSettings($("#updateArm"), "/update_arm");
+            });
             $(".popovers").popover({
                 trigger: "hover",
             });

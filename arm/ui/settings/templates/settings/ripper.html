@@ -1,28 +1,86 @@
 {% block ripper %}
     <div class="tab-pane pt-5" id="settings" role="tabpanel" aria-labelledby="settings-tab">
-        <h4> Ripper ARM Settings </h4>
+        <h4>Ripper settings</h4>
+        <p class="text-muted">Saved to <code>arm.yaml</code>. Secret fields show a mask; leave blank or unchanged to keep the current value.</p>
         <form id="ripperSettings" name="ripperSettings" method="post" action="">
             {{ form.hidden_tag() }}
+
+            <div class="arm-panel mb-4">
+                <h5 class="h6 text-uppercase mb-3" style="letter-spacing: 0.08em; color: var(--arm-accent);">Metadata / Movies DB</h5>
+                {% for k in ['METADATA_PROVIDER', 'OMDB_API_KEY', 'TMDB_API_KEY'] %}
+                    {% if k in settings %}
+                        {% set v = settings[k] %}
+                        <div class="form-group">
+                            <label class="arm-label" for="ripper-{{ k }}">{{ k }}</label>
+                            <div class="input-group mb-2">
+                                {% if k == 'METADATA_PROVIDER' %}
+                                    <select class="form-control" id="ripper-{{ k }}" name="{{ k }}"
+                                            {% if ripper_read_only %}disabled{% endif %}>
+                                        <option value="omdb" {% if v == 'omdb' %}selected{% endif %}>omdb</option>
+                                        <option value="tmdb" {% if v == 'tmdb' %}selected{% endif %}>tmdb</option>
+                                    </select>
+                                {% elif k.endswith('_KEY') %}
+                                    <input type="password" class="form-control" id="ripper-{{ k }}" name="{{ k }}"
+                                           autocomplete="off"
+                                           placeholder="{% if v %}********{% else %}(not set){% endif %}"
+                                           value=""
+                                           {% if ripper_read_only %}disabled{% endif %}>
+                                {% else %}
+                                    <input type="text" class="form-control" id="ripper-{{ k }}" name="{{ k }}"
+                                           value="{{ v }}"
+                                           {% if ripper_read_only %}disabled{% endif %}>
+                                {% endif %}
+                                {% if k in jsoncomments %}
+                                <a class="popovers" href="" onclick="return false;"
+                                   data-content="{{ jsoncomments[k]| replace('#', '\n') }}" rel="popover"
+                                   data-placement="top" data-original-title="{{ k }}">
+                                    <img title="More information" src="{{ url_for('static', filename='img/info.png') }}"
+                                         width="30" height="35" alt="More Info">
+                                </a>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <h5 class="h6 text-uppercase mb-3" style="letter-spacing: 0.08em; color: var(--arm-text-muted);">All ripper keys</h5>
             {% for k, v in settings.items() %}
+                {% if k not in ['METADATA_PROVIDER', 'OMDB_API_KEY', 'TMDB_API_KEY'] %}
                 <div class="input-group mb-3">
                     <div class="input-group-prepend">
-                        <span class="input-group-text" id="{{ k }}">{{ k }}: </span>
+                        <span class="input-group-text" id="label-{{ k }}">{{ k }}</span>
                     </div>
-                    <input type="text" class="form-control" aria-label="{{ k }}" name="{{ k }}"
-                           placeholder="{{ v }}" value="{{ v }}" aria-describedby="{{ k }}"
-                           {% if ripper_read_only %}
-                             disabled="" title="arm.yaml is read-only"
-                           {% endif %}>
-                    <a class="popovers" onClick='return false;' href=""
-                       data-content="{{ jsoncomments[k]| replace("#", "\n") }}" rel="popover"
+                    {% if v is sameas true or v is sameas false %}
+                        <select class="form-control" name="{{ k }}" aria-labelledby="label-{{ k }}"
+                                {% if ripper_read_only %}disabled{% endif %}>
+                            <option value="true" {% if v is sameas true %}selected{% endif %}>true</option>
+                            <option value="false" {% if v is sameas false %}selected{% endif %}>false</option>
+                        </select>
+                    {% elif k.endswith('_KEY') or k.endswith('_PASSWORD') or k.endswith('_API') or 'PASSWORD' in k %}
+                        <input type="password" class="form-control" name="{{ k }}"
+                               autocomplete="off"
+                               placeholder="{% if v %}********{% else %}(not set){% endif %}"
+                               value=""
+                               {% if ripper_read_only %}disabled{% endif %}>
+                    {% else %}
+                        <input type="text" class="form-control" name="{{ k }}"
+                               value="{{ v }}"
+                               {% if ripper_read_only %}disabled title="arm.yaml is read-only"{% endif %}>
+                    {% endif %}
+                    {% if k in jsoncomments %}
+                    <a class="popovers" href="" onclick="return false;"
+                       data-content="{{ jsoncomments[k]| replace('#', '\n') }}" rel="popover"
                        data-placement="top" data-original-title="{{ k }}">
-                        <img title="More information" src="{{ url_for('static', filename='img/info.png') }}" width="30px"
-                             height="35px" alt="More Info">
+                        <img title="More information" src="{{ url_for('static', filename='img/info.png') }}" width="30"
+                             height="35" alt="More Info">
                     </a>
+                    {% endif %}
                 </div>
+                {% endif %}
             {% endfor %}
-            <button id="settings" class="btn btn-secondary btn-lg btn-block" form="ripperSettings"
-                    type="submit">Submit
+            <button id="ripperSettingsSubmit" class="btn btn-primary btn-lg btn-block" form="ripperSettings"
+                    type="submit" {% if ripper_read_only %}disabled{% endif %}>Save ripper settings
             </button>
         </form>
     </div>

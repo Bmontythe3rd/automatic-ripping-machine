@@ -29,19 +29,7 @@ class ChangeParamsForm(FlaskForm):
 
 
 class SettingsForm(FlaskForm):
-    """settings form used on pages\n
-              - /settings"""
-    MANUAL_WAIT = StringField('MANUAL_WAIT', validators=[DataRequired()])
-    DATE_FORMAT = StringField('DATE_FORMAT', validators=[DataRequired()])
-    HB_PRESET_DVD = StringField('HB_PRESET_DVD', validators=[DataRequired()])
-    HB_PRESET_BD = StringField('HB_PRESET_BD', validators=[DataRequired()])
-    HANDBRAKE_CLI = StringField('HANDBRAKE_CLI', validators=[DataRequired()])
-    DBFILE = StringField('DBFILE', validators=[DataRequired()])
-    LOGPATH = StringField('LOGPATH', validators=[DataRequired()])
-    INSTALLPATH = StringField('INSTALLPATH', validators=[DataRequired()])
-    RAW_PATH = StringField('RAW_PATH', validators=[DataRequired()])
-    TRANSCODE_PATH = StringField('TRANSCODE_PATH', validators=[DataRequired()])
-    COMPLETED_PATH = StringField('COMPLETED_PATH', validators=[DataRequired()])
+    """CSRF wrapper for ripper settings POST (fields validated via merge helpers)."""
     submit = SubmitField('Submit')
 
 
@@ -90,6 +78,21 @@ class PasswordReset(FlaskForm):
     old_password = PasswordField('password', validators=[DataRequired()])
     new_password = PasswordField('password', validators=[DataRequired()])
     submit = SubmitField('Submit')
+
+
+class TotpForm(FlaskForm):
+    """Second-factor / enable-2FA token form."""
+    token = StringField('Authenticator code', validators=[DataRequired()])
+    submit = SubmitField('Verify')
+
+
+class UserCreateForm(FlaskForm):
+    """Admin create-user form."""
+    username = StringField('Username', validators=[DataRequired()])
+    password = PasswordField('Password', validators=[DataRequired()])
+    role = SelectField('Role', choices=[('admin', 'Admin'), ('operator', 'Operator')],
+                       validators=[DataRequired()])
+    submit = SubmitField('Create user')
 
 
 class AbcdeForm(FlaskForm):

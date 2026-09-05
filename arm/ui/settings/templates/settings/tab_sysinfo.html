@@ -1,7 +1,40 @@
 {% block tab_sysinfo %}
     <div class="tab-pane pt-5" id="system" role="tabpanel" aria-labelledby="system-tab">
-        <h4> System Info and Health </h4>
+        <h4>System Info and Health</h4>
         <p>Current CPU and System information - <a href="updatesysinfo">Update system information</a></p>
         {% include 'settings/sysinfo.html' %}
+
+        <div class="arm-panel mt-4">
+            <h5 class="h6 text-uppercase mb-3" style="letter-spacing: 0.08em; color: var(--arm-accent);">Hardware encode</h5>
+            <p class="text-muted">Detected HandBrake encoders in this container/host. Enable auto to use them without editing preset strings.</p>
+            <ul class="list-unstyled mb-3">
+                <li>NVIDIA NVENC:
+                    {% if stats.hw_support.nvidia %}<span class="text-success">available</span>{% else %}<span class="text-muted">not detected</span>{% endif %}
+                </li>
+                <li>Intel QuickSync:
+                    {% if stats.hw_support.intel %}<span class="text-success">available</span>{% else %}<span class="text-muted">not detected</span>{% endif %}
+                </li>
+                <li>AMD VCN/VCE:
+                    {% if stats.hw_support.amd %}<span class="text-success">available</span>{% else %}<span class="text-muted">not detected</span>{% endif %}
+                </li>
+            </ul>
+            <p>HB_HW_AUTO:
+                {% if settings.get('HB_HW_AUTO') is sameas true or settings.get('HB_HW_AUTO') == 'true' %}
+                    <strong>on</strong>
+                {% else %}
+                    <strong>off</strong> (software presets)
+                {% endif %}
+            </p>
+            <form id="hwEncodeForm" method="post">
+                {{ form.hidden_tag() }}
+                <button type="submit" class="btn btn-primary" id="applyHwPresets">
+                    Enable auto HW encode (HB_HW_AUTO)
+                </button>
+            </form>
+            <p class="small text-muted mt-2 mb-0">
+                Docker: use compose profile <code>gpu-intel</code>, <code>gpu-amd</code>, or <code>gpu-nvidia</code>
+                (see <code>docs/hardware-transcode.md</code>).
+            </p>
+        </div>
     </div>
 {% endblock %}

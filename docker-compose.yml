@@ -10,6 +10,8 @@
 #   open http://localhost:8080  (admin / password)
 #
 # For real ripping, uncomment the devices: and udev volume lines below.
+# For HW encode, enable a profile: --profile gpu-intel | gpu-amd | gpu-nvidia
+#   See docs/hardware-transcode.md
 
 services:
   arm:
@@ -40,3 +42,30 @@ services:
     # Uncomment optical drives when present:
     # devices:
     #   - /dev/sr0:/dev/sr0
+
+  # --- Optional HW encode overlays (compose profiles) ---
+  # docker compose --profile gpu-intel up -d
+  # Merges with the arm service via YAML anchors are awkward in Compose v2;
+  # instead, uncomment the matching block under services.arm when needed, or:
+  # use the examples below as reference for devices/environment.
+
+# Example Intel QuickSync / AMD VCN (add under services.arm):
+#    devices:
+#      - /dev/dri:/dev/dri
+#    group_add:
+#      - video
+#      - render
+#
+# Example NVIDIA NVENC (add under services.arm):
+#    environment:
+#      - NVIDIA_DRIVER_CAPABILITIES=all
+#      - NVIDIA_VISIBLE_DEVICES=all
+#    deploy:
+#      resources:
+#        reservations:
+#          devices:
+#            - driver: nvidia
+#              count: all
+#              capabilities: [gpu]
+#
+# Or: docker run --gpus all ... with NVIDIA Container Toolkit installed.
