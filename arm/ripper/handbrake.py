@@ -197,6 +197,16 @@ def handbrake_all(srcpath, basepath, logfile, job):
             track.ripped = True
             db.session.commit()
 
+    ripped = [t for t in job.tracks if t.ripped]
+    if not ripped:
+        msg = ("HandBrake finished but no tracks were ripped "
+               "(all skipped by length filters or scan found nothing).")
+        logging.error(msg)
+        job.status = JobState.FAILURE.value
+        job.errors = msg
+        db.session.commit()
+        raise RuntimeError(msg)
+
     logging.info(PROCESS_COMPLETE)
     logging.debug(f"\n\r{job.pretty_table()}")
 
@@ -231,6 +241,14 @@ def handbrake_mkv(srcpath, basepath, logfile, job):
     handbrake_sleep_check(job)
     logging.info("Starting Handbrake for MKV files.")
     hb_args, hb_preset = correct_hb_settings(job)
+
+    if not os.path.isdir(srcpath) or not os.listdir(srcpath):
+        msg = f"No MakeMKV files found to transcode in {srcpath}"
+        logging.error(msg)
+        job.status = JobState.FAILURE.value
+        job.errors = msg
+        db.session.commit()
+        raise RuntimeError(msg)
 
     # This will fail if the directory raw gets deleted
     for files in os.listdir(srcpath):

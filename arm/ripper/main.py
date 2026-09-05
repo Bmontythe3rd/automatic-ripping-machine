@@ -254,18 +254,28 @@ if __name__ == "__main__":
                 f"ARM encountered a fatal error processing {job.title}. "
                 f"Check the logs for more details. {error}"
             )
+            job.status = JobState.FAILURE.value
+            job.errors = str(error)
         else:
             utils.notify(
-                job,
+                None,
                 constants.NOTIFY_TITLE,
                 f"ARM encountered a fatal error during job setup."
                 f"Check the logs for more details. {error}"
             )
-        job.status = JobState.FAILURE.value
-        job.errors = str(error)
-        # Possibly add cleanup section here for failed job files
     else:
-        job.status = JobState.SUCCESS.value
+        if job:
+            # Never mark success if the job already failed or recorded errors
+            if job.errors or job.status == JobState.FAILURE.value:
+                job.status = JobState.FAILURE.value
+            else:
+                try:
+                    utils.require_completed_media(job)
+                    job.status = JobState.SUCCESS.value
+                except utils.RipperException as verify_error:
+                    logging.critical(verify_error)
+                    job.status = JobState.FAILURE.value
+                    job.errors = str(verify_error)
     finally:
         if job:
             job.eject()  # each job stores its eject status, so it is safe to call.
@@ -274,4 +284,4 @@ if __name__ == "__main__":
             minutes, seconds = divmod(job_length.seconds + job_length.days * 86400, 60)
             hours, minutes = divmod(minutes, 60)
             job.job_length = f'{hours:d}:{minutes:02d}:{seconds:02d}'
-        db.session.commit()
+            db.session.commit()

@@ -49,6 +49,11 @@ RUN mkdir /etc/service/armui
 COPY ./scripts/docker/runsv/armui.sh /etc/service/armui/run
 RUN chmod +x /etc/service/armui/run
 
+# Optional optical-drive poller (ARM_DRIVE_POLL=1)
+RUN mkdir /etc/service/drive_poller
+COPY ./scripts/docker/runsv/drive_poller.sh /etc/service/drive_poller/run
+RUN chmod +x /etc/service/drive_poller/run
+
 # Create our startup scripts
 RUN mkdir -p /etc/my_init.d
 COPY ./scripts/docker/runit/arm_user_files_setup.sh /etc/my_init.d/arm_user_files_setup.sh

@@ -62,6 +62,10 @@ def rip_visual_media(have_dupes, job, logfile, protection):
         except Exception as mkv_error:  # noqa: E722
             raise utils.RipperException("Error while running MakeMKV") from mkv_error
 
+        if not makemkv_out_path:
+            raise utils.RipperException("MakeMKV finished without an output path")
+        utils.require_rip_output(makemkv_out_path, label="MakeMKV")
+
         if job.config.NOTIFY_RIP:
             utils.notify(job, constants.NOTIFY_TITLE, f"{job.title} rip complete. Starting transcode. ")
         logging.info("************* Ripping with MakeMKV completed *************")

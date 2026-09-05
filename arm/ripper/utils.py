@@ -36,6 +36,55 @@ class RipperException(Exception):
     pass
 
 
+MEDIA_EXTENSIONS = {".mkv", ".mp4", ".m4v", ".avi", ".iso", ".m2ts"}
+
+
+def media_files_in(path):
+    """Return media filenames in a directory (non-recursive)."""
+    if not path or not os.path.isdir(path):
+        return []
+    return sorted(
+        name for name in os.listdir(path)
+        if os.path.splitext(name)[1].lower() in MEDIA_EXTENSIONS
+        and os.path.isfile(os.path.join(path, name))
+    )
+
+
+def require_rip_output(path, label="Rip"):
+    """
+    Ensure a rip directory contains at least one media file.
+
+    Raises RipperException when empty — used to stop jobs being marked success
+    after MakeMKV/HandBrake exit 0 with nothing written.
+    """
+    files = media_files_in(path)
+    if not files:
+        raise RipperException(
+            f"{label} finished but produced no media files in '{path}'"
+        )
+    logging.info("%s produced %d media file(s) in %s", label, len(files), path)
+    return files
+
+
+def require_completed_media(job):
+    """Final gate before marking a job successful."""
+    if job.disctype == "music":
+        # Music lands under MUSIC_PATH / artist layout — presence is harder to verify;
+        # status/errors already gate success for audio jobs.
+        return True
+    path = job.path
+    if path and os.path.isdir(path) and media_files_in(path):
+        return True
+    # Fall back to RAW_PATH title folder when skip-transcode left files there
+    if path:
+        parent = os.path.dirname(path)
+        if parent and media_files_in(parent):
+            return True
+    raise RipperException(
+        f"Job {getattr(job, 'job_id', '?')} finished without media under '{path}'"
+    )
+
+
 def notify(job, title: str, body: str):
     """
     Send notifications with apprise\n

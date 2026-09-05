@@ -1120,8 +1120,6 @@ class MakeMKVOutputChecker:
 
     LOG_ONLY_CODES = {
         MessageID.RIP_DISC_OPEN_ERROR: logging.info,
-        MessageID.RIP_TITLE_ERROR: logging.warning,
-        MessageID.RIP_COMPLETED: logging.info,
         MessageID.LIBMKV_TRACE: logging.warning,
         MessageID.RIP_BACKUP_FAILED_PRE: logging.warning,
         MessageID.EVALUATION_PERIOD_EXPIRED_INFO: logging.warning,
@@ -1145,7 +1143,7 @@ class MakeMKVOutputChecker:
         if code == MessageID.RIP_TITLE_ERROR:
             self.rip_title_error()
 
-        if code == MessageID.RIP_COMPLETED:
+        if code in (MessageID.RIP_COMPLETED, MessageID.RIP_SUMMARY_AFTER):
             return self.zero_saved_files()
 
         if code == MessageID.READ_ERROR:
@@ -1165,15 +1163,30 @@ class MakeMKVOutputChecker:
 
     def zero_saved_files(self):
         """
-        Check the MSG and see if we saved no files. Raise MakeMkvRuntimeError if saved files =0
+        Check MSG:5004 / MSG:5037 and fail when zero titles were saved.
         """
         params = self.data.sprintf[1:]
-        saved = int(params[0])  # 0
-        logging.debug(self.data)
+        try:
+            saved = int(params[0])
+        except (IndexError, TypeError, ValueError):
+            logging.warning("Could not parse saved-title count from: %s", self.data)
+            return self.data
+        failed = 0
+        try:
+            failed = int(params[1])
+        except (IndexError, TypeError, ValueError):
+            pass
+        logging.debug("MakeMKV rip summary: saved=%s failed=%s (%s)", saved, failed, self.data.message)
         if saved == 0:
             logging.critical(self.data.message)
-            raise MakeMkvRuntimeError(1, ["RIP_COMPLETED"],
-                                      output=f"{saved} titles were saved. See log for more details")
+            raise MakeMkvRuntimeError(
+                1,
+                ["RIP_COMPLETED"],
+                output=f"{saved} titles were saved, {failed} failed. See log for more details",
+            )
+        if failed:
+            logging.warning("MakeMKV reported %s failed title(s) (saved=%s)", failed, saved)
+        return self.data
 
     def rip_title_error(self):
         """
