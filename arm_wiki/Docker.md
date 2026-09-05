@@ -48,12 +48,18 @@ Always `--build` after dependency or Dockerfile changes (e.g. `pyotp` for 2FA).
 
 ## NAS media + SFTP
 
+The UI STORAGE card shows **container** paths from `arm.yaml` (`/home/arm/media/...`).
+That is normal — remap the **host** Docker bind (often under `/mnt`), do not change those yaml paths.
+
 Map a NAS under `/mnt` and generate `docker-compose.nas.yml`:
 
 ```bash
 ./scripts/installers/configure-storage.sh
 docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
+docker inspect arm-rippers --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}'
 ```
+
+Expect `/mnt/... -> /home/arm/media` (not `<repo>/data/media`).
 
 Pull completed rips from another PC:
 

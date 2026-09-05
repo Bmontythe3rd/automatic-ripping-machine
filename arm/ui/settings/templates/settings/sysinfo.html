@@ -71,8 +71,14 @@
                         <strong>Storage</strong>
                     </div>
                     <ul class="list-group list-group-flush">
+                        <li class="list-group-item small text-muted">
+                            Paths below are <em>inside the container</em> (from arm.yaml).
+                            Free space is the filesystem backing that bind mount —
+                            remap the host side with
+                            <span class="arm-mono">docker-compose.nas.yml</span>, not arm.yaml.
+                        </li>
                         <li class="list-group-item">
-                            {% if server.storage_transcode_free != 0 %}
+                            {% if serverutil.storage_transcode_free != 0 %}
                                 <h6 class="progress-label" style="float: left;margin-right: 1em;">Transcode: </h6>
                                 <div class="progress">
                                     <div class="progress-bar{{ ' bg-danger' if serverutil.storage_transcode_percent > 80 }}"
@@ -87,7 +93,14 @@
                             {% else %}
                                 Transcode: Unable to get data on path
                             {% endif %}
-                            <br><span class="arm-mono">Path: {{ arm_path }}</span>
+                            <br><span class="arm-mono">Container: {{ arm_path }}</span>
+                            {% if serverutil.storage_transcode_host %}
+                                <br><span class="arm-mono">Host: {{ serverutil.storage_transcode_host }}</span>
+                            {% else %}
+                                <br><span class="text-muted">Host: unknown — run
+                                    <span class="arm-mono">docker inspect arm-rippers</span>
+                                    (see docs/storage-and-sftp.md)</span>
+                            {% endif %}
                         </li>
                         <li class="list-group-item">
                             {% if serverutil.storage_completed_free != 0 %}
@@ -105,7 +118,14 @@
                             {% else %}
                                 Completed: Unable to get data on path
                             {% endif %}
-                            <br><span class="arm-mono">Path: {{ media_path }}</span>
+                            <br><span class="arm-mono">Container: {{ media_path }}</span>
+                            {% if serverutil.storage_completed_host %}
+                                <br><span class="arm-mono">Host: {{ serverutil.storage_completed_host }}</span>
+                            {% else %}
+                                <br><span class="text-muted">Host: unknown — run
+                                    <span class="arm-mono">docker inspect arm-rippers</span>
+                                    (see docs/storage-and-sftp.md)</span>
+                            {% endif %}
                         </li>
                     </ul>
                 </div>

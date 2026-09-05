@@ -7,6 +7,7 @@ import psutil
 
 import arm.config.config as cfg
 from arm.ui import app
+from arm.ui.settings.storage_mount import resolve_host_storage_path
 from flask import flash
 
 
@@ -21,6 +22,9 @@ class ServerUtil():
     storage_transcode_percent = 0.0
     storage_completed_free = 0
     storage_completed_percent = 0.0
+    # Host bind sources (Docker volume Source), when discoverable
+    storage_transcode_host = None
+    storage_completed_host = None
 
     def __init__(self):
         self.get_update()
@@ -29,10 +33,16 @@ class ServerUtil():
         self.get_cpu_util()
         self.get_cpu_temp()
         self.get_memory()
+        transcode_path = cfg.arm_config['TRANSCODE_PATH']
+        completed_path = cfg.arm_config['COMPLETED_PATH']
         self.storage_transcode_free, self.storage_transcode_percent = \
-            self.get_disk_space(cfg.arm_config['TRANSCODE_PATH'])
+            self.get_disk_space(transcode_path)
         self.storage_completed_free, self.storage_completed_percent = \
-            self.get_disk_space(cfg.arm_config['COMPLETED_PATH'])
+            self.get_disk_space(completed_path)
+        self.storage_transcode_host = resolve_host_storage_path(transcode_path)
+        self.storage_completed_host = resolve_host_storage_path(completed_path)
+        app.logger.debug(f"Transcode host mount: {self.storage_transcode_host}")
+        app.logger.debug(f"Completed host mount: {self.storage_completed_host}")
 
     def get_cpu_util(self):
         try:
