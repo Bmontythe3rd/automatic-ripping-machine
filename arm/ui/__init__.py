@@ -96,9 +96,14 @@ migrate = Migrate(app, db)
 
 
 @event.listens_for(Engine, "connect")
-def _set_sqlite_pragma(dbapi_connection, connection_record):
-    """Reduce SQLite lock errors under concurrent UI + ripper writers."""
-    if connection_record.dialect.name != "sqlite":
+def _set_sqlite_pragma(dbapi_connection, _connection_record):
+    """Reduce SQLite lock errors under concurrent UI + ripper writers.
+
+    Detect SQLite via the DBAPI connection — PoolEvents.connect receives a
+    _ConnectionRecord that has no .dialect attribute on current SQLAlchemy.
+    """
+    module = type(dbapi_connection).__module__
+    if module not in ("sqlite3", "pysqlite2.dbapi2"):
         return
     cursor = dbapi_connection.cursor()
     try:
