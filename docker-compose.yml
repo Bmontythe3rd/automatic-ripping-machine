@@ -14,8 +14,10 @@
 #   open http://localhost:8080  (admin / password)
 #
 # For real ripping, uncomment the devices: and udev volume lines below.
-# For HW encode, enable a profile: --profile gpu-intel | gpu-amd | gpu-nvidia
+# For NVIDIA HW encode (auto-detect; no vendor key in arm.yaml):
+#   docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d
 #   See docs/hardware-transcode.md
+# For Intel/AMD, uncomment /dev/dri examples at the bottom of this file.
 
 services:
   arm:

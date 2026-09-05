@@ -1,0 +1,26 @@
+# NVIDIA GPU overlay for this ARM fork.
+#
+# Usage (do not interrupt an active rip — wait, then recreate):
+#   docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d
+#
+# Host prerequisites:
+#   - nvidia-smi works
+#   - NVIDIA Container Toolkit installed + docker restarted
+#
+# HB_HW_AUTO in arm.yaml does NOT pass the GPU in. It only tells ARM to pick
+# NVENC/QSV/VCN presets after HandBrake reports them. Detection is automatic.
+
+services:
+  arm:
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      # "all" is required for NVENC (video encode), not just compute
+      - NVIDIA_DRIVER_CAPABILITIES=all
+    gpus: all
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
