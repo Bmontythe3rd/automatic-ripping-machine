@@ -46,6 +46,24 @@ docker compose up -d --build
 
 Always `--build` after dependency or Dockerfile changes (e.g. `pyotp` for 2FA).
 
+## NAS media + SFTP
+
+Map a NAS under `/mnt` and generate `docker-compose.nas.yml`:
+
+```bash
+./scripts/installers/configure-storage.sh
+docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
+```
+
+Pull completed rips from another PC:
+
+```bash
+sudo passwd arm
+sftp arm@YOUR_SERVER_IP
+```
+
+Details: [`docs/storage-and-sftp.md`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docs/storage-and-sftp.md).
+
 ## Optical drives (real ripping)
 
 Uncomment in compose:

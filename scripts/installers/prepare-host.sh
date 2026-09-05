@@ -160,6 +160,31 @@ optical_hint() {
   fi
 }
 
+offer_storage_setup() {
+  echo
+  echo -e "${GREEN}Optional: map a NAS under /mnt and generate docker-compose.nas.yml${NC}"
+  echo "  (media/music on NAS; config/logs stay local)"
+  local reply
+  read -r -p "Run storage/NAS configurator now? [y/N]: " reply || true
+  if [[ "${reply}" =~ ^[Yy]$ ]]; then
+    local script
+    script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/configure-storage.sh"
+    if [[ -x "${script}" ]]; then
+      # Drop privileges to invoking user for compose file writes when possible
+      if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
+        sudo -u "${SUDO_USER}" bash "${script}" || bash "${script}"
+      else
+        bash "${script}"
+      fi
+    else
+      echo -e "${YELLOW}configure-storage.sh not found/executable at ${script}${NC}"
+    fi
+  else
+    echo "You can run it later:"
+    echo "  ./scripts/installers/configure-storage.sh"
+  fi
+}
+
 print_next_steps() {
   cat <<EOF
 
@@ -174,6 +199,15 @@ Next (as your normal user, from the repo clone):
   export ARM_UID=\$(id -u) ARM_GID=\$(id -g) ARM_HOME=\$PWD/data
   docker compose up -d --build
 
+NAS media mapping (optional):
+  ./scripts/installers/configure-storage.sh
+  docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
+
+SFTP (pull completed rips from another PC):
+  sudo passwd arm          # if using host user 'arm'
+  sftp arm@YOUR_SERVER_IP
+  # then: cd media/completed   OR   cd /path/to/repo/data/media/completed
+
 Ubuntu Server 26.04 and other modern Linux servers are supported via Docker.
 Docs: https://github.com/Bmontythe3rd/automatic-ripping-machine/wiki/Docker
 EOF
@@ -186,4 +220,5 @@ ensure_docker
 maybe_create_arm_user
 add_invoking_user_to_docker
 optical_hint
+offer_storage_setup
 print_next_steps

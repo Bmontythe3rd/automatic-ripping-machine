@@ -14,8 +14,14 @@
 #   open http://localhost:8080  (admin / password)
 #
 # For real ripping, uncomment the devices: and udev volume lines below.
-# For HW encode, enable a profile: --profile gpu-intel | gpu-amd | gpu-nvidia
+# For NVIDIA HW encode:
+#   docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d
 #   See docs/hardware-transcode.md
+# For NAS media/music under /mnt (generates docker-compose.nas.yml):
+#   ./scripts/installers/configure-storage.sh
+#   docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
+#   See docs/storage-and-sftp.md
+# For Intel/AMD, uncomment /dev/dri examples at the bottom of this file.
 
 services:
   arm:

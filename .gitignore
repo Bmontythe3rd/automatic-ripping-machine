@@ -113,6 +113,9 @@ celerybeat.pid
 
 # Environments
 .env
+.env.nas
+docker-compose.nas.yml
+docker-compose.override.yml
 .venv
 env/
 venv/
