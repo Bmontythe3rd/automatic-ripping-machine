@@ -10,7 +10,7 @@ import subprocess
 import re
 from datetime import datetime
 from pathlib import Path
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import SQLAlchemyError, OperationalError
 from time import strftime, localtime, time, sleep
 
 import bcrypt
@@ -65,6 +65,30 @@ def database_updater(args, job, wait_time=90):
     return True
 
 
+def _sqlite_has_alembic_table(db_file):
+    """Return True if db_file has an alembic_version table."""
+    import sqlite3
+
+    try:
+        conn = sqlite3.connect(db_file)
+        try:
+            row = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='alembic_version'"
+            ).fetchone()
+            return row is not None
+        finally:
+            conn.close()
+    except sqlite3.Error:
+        return False
+
+
+def _remove_sqlite_db_files(db_file):
+    """Remove a SQLite database and its WAL/SHM sidecars."""
+    for path in (db_file, f"{db_file}-wal", f"{db_file}-shm"):
+        if os.path.isfile(path):
+            os.remove(path)
+
+
 def check_db_version(install_path, db_file):
     """
     Check if db exists and is up-to-date.
@@ -81,6 +105,12 @@ def check_db_version(install_path, db_file):
     config.set_main_option("script_location", mig_dir)
     script = ScriptDirectory.from_config(config)
 
+    # Empty stub DBs (e.g. created by a failed first connect) have no schema
+    if os.path.isfile(db_file) and not _sqlite_has_alembic_table(db_file):
+        app.logger.warning(
+            "Database file exists but is not initialized; recreating %s", db_file)
+        _remove_sqlite_db_files(db_file)
+
     # create db file if it doesn't exist
     if not os.path.isfile(db_file):
         app.logger.info("No database found.  Initializing arm.db...")
@@ -90,14 +120,15 @@ def check_db_version(install_path, db_file):
 
         if not os.path.isfile(db_file):
             app.logger.debug("Can't create database file.  This could be a permissions issue.  Exiting...")
-        else:
-            # Only run the below if the db exists
-            # Check to see if db is at current revision
-            head_revision = script.get_current_head()
-            app.logger.debug("Alembic Head is: " + head_revision)
+            return
 
-            conn = sqlite3.connect(db_file)
-            c = conn.cursor()
+        # Only run the below if the db exists
+        # Check to see if db is at current revision
+        head_revision = script.get_current_head()
+        app.logger.debug("Alembic Head is: " + head_revision)
+
+        conn = sqlite3.connect(db_file)
+        c = conn.cursor()
 
         c.execute('SELECT version_num FROM alembic_version')
         db_version = c.fetchone()[0]
@@ -122,6 +153,7 @@ def check_db_version(install_path, db_file):
             else:
                 app.logger.error(f"Database is still out of date. "
                                  f"Head is {head_revision} and database is {db_version}.  Exiting arm.")
+        conn.close()
 
 
 def arm_alembic_get():
@@ -145,10 +177,17 @@ def arm_alembic_get():
 
 def arm_db_get():
     """
-    Get the Alembic Head revision
+    Get the database Alembic revision row, or None if missing/uninitialized.
     """
-    alembic_db = AlembicVersion()
-    db_revision = alembic_db.query.first()
+    try:
+        db_revision = AlembicVersion.query.first()
+    except (OperationalError, SQLAlchemyError) as err:
+        app.logger.debug(f"Unable to read alembic_version: {err}")
+        db.session.rollback()
+        return None
+    if db_revision is None:
+        app.logger.debug("Database Head is: None")
+        return None
     app.logger.debug(f"Database Head is: {db_revision.version_num}")
     return db_revision
 
@@ -165,21 +204,29 @@ def arm_db_check():
 
     head_revision = arm_alembic_get()
 
-    # Check if the db file exists
+    # Check if the db file exists and is actually initialized
     if os.path.isfile(db_file):
-        db_exists = True
-        # Get the database alembic version
         db_revision = arm_db_get()
-        if db_revision.version_num == head_revision:
-            db_current = True
-            app.logger.debug(
-                f"Database is current. Head: {head_revision}" +
-                f"DB: {db_revision.version_num}")
-        else:
+        if db_revision is None:
+            # Stub/corrupt DB left by a failed first start — treat as missing
+            app.logger.warning(
+                f"Database file is present but not initialized: {db_file}")
+            db_exists = False
             db_current = False
-            app.logger.info(
-                "Database is not current, update required." +
-                f" Head: {head_revision} DB: {db_revision.version_num}")
+            head_revision = None
+            db_revision = None
+        else:
+            db_exists = True
+            if db_revision.version_num == head_revision:
+                db_current = True
+                app.logger.debug(
+                    f"Database is current. Head: {head_revision}" +
+                    f"DB: {db_revision.version_num}")
+            else:
+                db_current = False
+                app.logger.info(
+                    "Database is not current, update required." +
+                    f" Head: {head_revision} DB: {db_revision.version_num}")
     else:
         db_exists = False
         db_current = False
