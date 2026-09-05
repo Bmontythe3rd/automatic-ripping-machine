@@ -1,33 +1,38 @@
 {% extends "base.html" %}
-{% block title %}Logs{% endblock %}
+{% block title %}Confirm title{% endblock %}
 
 {% block nav %}{{ super() }}{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-sm-3"></div>
-            <div class="col-sm-6 text-center">
-                <div class="card text-center">
-                    <div class="card-header"><a href="select_title?imdbID={{ results["imdbID"] }}&job_id={{ job_id }}"><img src="{{ results["Poster"] }}" width="240px" class="img-thumbnail" alt="Poster Image"></a></div>
-                    <div class="card-body"><strong>{{  results["Title"]  }}</strong> - {{ results["Type"].capitalize() }} ({{ results["Year"] }})</div>
-                    <div class="card-body"><strong>Full Plot:</strong> {{ results["Plot"] }}</div>
-                    <div class="card-footer">
-						<a href="titlesearch?job_id={{ job_id }}" class="btn btn-primary">New Search</a>   
-                        <a href="{{ url_for('route_jobs.updatetitle',
-                                            title=results['Title'],
-                                            year=results['Year'],
-                                            imdbID=results['imdbID'],
-                                            type=results['Type'],
-                                            poster=results['Poster'],
-                                            job_id=job_id) }}" class="btn btn-primary">Update Title</a>
-                    </div>
-                </div>
+<header class="arm-page-hero">
+    <h1>Confirm title</h1>
+    <p>Review the match, then update the job or search again.</p>
+</header>
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-5">
+        <div class="card text-center">
+            <div class="card-header">
+                <a href="select_title?imdbID={{ results["imdbID"] }}&job_id={{ job_id }}">
+                    <img src="{{ results["Poster"] }}" width="240" class="img-thumbnail" alt="Poster">
+                </a>
             </div>
-        <div class="col-sm-3"></div>     
+            <div class="card-body">
+                <h2 class="h4">{{ results["Title"] }}</h2>
+                <p class="text-muted mb-2">{{ results["Type"].capitalize() }} ({{ results["Year"] }})</p>
+                <p><strong>Plot:</strong> {{ results["Plot"] }}</p>
+            </div>
+            <div class="card-footer d-flex flex-wrap justify-content-center" style="gap: 0.5rem;">
+                <a href="titlesearch?job_id={{ job_id }}" class="btn btn-secondary">New search</a>
+                <a href="{{ url_for('route_jobs.updatetitle',
+                                    title=results['Title'],
+                                    year=results['Year'],
+                                    imdbID=results['imdbID'],
+                                    type=results['Type'],
+                                    poster=results['Poster'],
+                                    job_id=job_id) }}" class="btn btn-primary">Update title</a>
+            </div>
+        </div>
     </div>
 </div>
-
-
-
 {% endblock %}

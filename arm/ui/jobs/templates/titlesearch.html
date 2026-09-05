@@ -3,34 +3,33 @@
 
 {% block nav %}{{ super() }}{% endblock %}
 
-{% block content %}  
-<div class="container d-flex justify-content-center">
-    <div class="row" style="flex-wrap: nowrap">
-        <form action="" method="get" novalidate>
-			{{ form.hidden_tag() }}
-			<div class="input-group mb-3">
-				<div class="input-group-prepend">
-					<span class="input-group-text" id="searchtitle">Title</span>
-				</div>
-				<input type="text" class="form-control" aria-label="searchtitle" name="title" value="{{job.title}}" aria-describedby="searchtitle">
-			    <div class="invalid-tooltip">
-					Search can't be blank
-				</div>
-				<div class="input-group-prepend">
-					<span class="input-group-text" id="basic-addon1">Year</span>
-				</div>
-				<input type="text" class="form-control" name="year" value="{{job.year}}" aria-label="year" aria-describedby="basic-addon1">
-			</div>
-			<input class="form-control" name="save" value="save" hidden>
-			<input class="form-control" name="job_id" value="{{ job.job_id }}" hidden>
-			<button class="btn btn-info btn-lg btn-block" type="submit">Search</button>
-		</form>
-	</div>
+{% block content %}
+<header class="arm-page-hero">
+    <h1>Title search</h1>
+    <p>Find the matching title for this disc, then confirm to continue the rip.</p>
+</header>
+
+<div class="arm-search-form">
+    <form action="" method="get" novalidate>
+        {{ form.hidden_tag() }}
+        <div class="form-group">
+            <label class="arm-label" for="search-title">Title</label>
+            <input id="search-title" type="text" class="form-control" name="title" value="{{ job.title }}">
+            <div class="invalid-tooltip">Search can't be blank</div>
+        </div>
+        <div class="form-group">
+            <label class="arm-label" for="search-year">Year</label>
+            <input id="search-year" type="text" class="form-control" name="year" value="{{ job.year }}">
+        </div>
+        <input class="form-control" name="save" value="save" hidden>
+        <input class="form-control" name="job_id" value="{{ job.job_id }}" hidden>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Search</button>
+    </form>
 </div>
-			{% if form.errors %}
-				{% for k in form.errors %}
-					<script>$("[name='{{k}}']").addClass("is-invalid");</script>
-				{% endfor %}
-			{% endif %}
+{% if form.errors %}
+    {% for k in form.errors %}
+        <script>$("[name='{{k}}']").addClass("is-invalid");</script>
+    {% endfor %}
+{% endif %}
 
 {% endblock %}

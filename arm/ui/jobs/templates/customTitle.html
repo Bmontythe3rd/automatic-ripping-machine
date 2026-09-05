@@ -3,44 +3,32 @@
 
 {% block nav %}{{ super() }}{% endblock %}
 
-{% block content %}  
-	<div class="row text-center justify-content-center">
-		<div class="col">
-			<p>This is intended for DVDs or for TV Series that have more than one disk</p>
-		</div>
-	</div> 
-<div class="container justify-content-center">
-    <div class="row justify-content-center" style="flex-wrap: nowrap">
-        <div class="col-7">
-		<form action="" method="get" novalidate>
-			<div class="input-group mb-3 flex-nowrap">
-				<div class="input-group-prepend">
-					<span class="input-group-text" id="searchtitle">Title</span>
-				</div>
-				<input type="text" class="form-control" aria-label="searchtitle" name="title" placeholder="title..." value="{{job.title if job.title != '' else '' }}" aria-describedby="searchtitle">
-			    <div class="invalid-tooltip">
-					Title can't be blank
-				</div>
-			</div>
-			<div class="input-group mb-3 flex-nowrap">
-				<div class="input-group-prepend">
-					<span class="input-group-text" id="basic-addon1">Year</span>
-				</div>
-				<input type="text" class="form-control" name="year" aria-label="year" value="{{ job.year if job.year != '' else '' }}" aria-describedby="basic-addon1">
-			</div>
-			<input class="form-control" name="job_id" value="{{ job.job_id }}" hidden>
-			<button class="btn btn-info btn-lg btn-block" type="submit">Set Custom Title</button>
-		</form>
-		</div>
-	</div>
-			{% if form.errors %}
-				{% for k in form.errors %}
-					<script>$("[name='{{k}}']").addClass("is-invalid");</script>
-				{% endfor %}
-			{% endif %}
+{% block content %}
+<header class="arm-page-hero">
+    <h1>Custom title</h1>
+    <p>For DVDs or TV series that span more than one disc.</p>
+</header>
+
+<div class="arm-search-form">
+    <form action="" method="get" novalidate>
+        <div class="form-group">
+            <label class="arm-label" for="custom-title">Title</label>
+            <input id="custom-title" type="text" class="form-control" name="title"
+                   placeholder="Title" value="{{ job.title if job.title != '' else '' }}">
+            <div class="invalid-tooltip">Title can't be blank</div>
+        </div>
+        <div class="form-group">
+            <label class="arm-label" for="custom-year">Year</label>
+            <input id="custom-year" type="text" class="form-control" name="year"
+                   value="{{ job.year if job.year != '' else '' }}">
+        </div>
+        <input class="form-control" name="job_id" value="{{ job.job_id }}" hidden>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">Set custom title</button>
+    </form>
 </div>
-
-
-
-
+{% if form.errors %}
+    {% for k in form.errors %}
+        <script>$("[name='{{k}}']").addClass("is-invalid");</script>
+    {% endfor %}
+{% endif %}
 {% endblock %}

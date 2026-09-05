@@ -6,32 +6,20 @@
         display: none!important;
     }
 </style>
-<div class="container-fluid h-100 mx-auto">
+<header class="arm-page-hero">
+    <h1>Send DVDs to API</h1>
+    <p>Movies this install attempted to submit to the ARM API.</p>
+</header>
+<div class="arm-panel mb-5">
     <div class="row">
-        <div class="col-sm-12  rounded text-center">
-            <img src="static/img/arm80.png" alt="Automatic Ripping Machine">
-            <p class="text-center">
-                <strong>Welcome to your Automatic Ripping Machine<br></strong>
-            </p>
-        </div>
-    </div>
-
-    <div class="jumbotron mb-5">
-        <div class="row h-100 mx-auto align-items-center">
-            <div class="col-sm-12 mx-auto">
-                <h5 class="text-center"><strong>These are the movies we tried to send to the ARM API</strong></h5>
+        <div class="loading-spinner">
+            <div class="d-flex justify-content-center align-items-center" style="gap: 0.75rem;">
+                <div class="spinner-border" role="status"><span class="sr-only"></span></div>
+                <div id="currentTotal"></div>
             </div>
         </div>
-        <div class="row">
-            <div class="loading-spinner">
-                <div class="d-flex justify-content-center">
-                    <div class="spinner-border" role="status"><span class="sr-only"></span></div>
-                    <div id="currentTotal"></div>
-                </div>
-            </div>
-            <div class="col-md-12 mx-auto">
-                <div class="card-deck">
-                </div>
+        <div class="col-md-12 mx-auto">
+            <div class="card-deck">
             </div>
         </div>
     </div>

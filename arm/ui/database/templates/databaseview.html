@@ -10,23 +10,11 @@
         left: 200px;
     }
 </style>
-    <div class="container-fluid h-100 mx-auto">
-        <!-- Header image -->
-        <div class="row">
-            <div class="col-sm-12  rounded text-center">
-                <img src="static/img/arm80.png" alt="Automatic Ripping Machine">
-                <p class="text-center">
-                    <strong>Welcome to your Automatic Ripping Machine<br></strong>
-                </p>
-            </div>
-        </div>
-        <div class="row h-100 mx-auto align-items-center">
-            <div class="col-sm-12 mx-auto">
-                <p class="text-center">
-                    <h5 class="text-center"><strong>Database Entries</strong></h5>
-                </p>
-            </div>
-        </div>
+    <header class="arm-page-hero">
+        <h1>Database</h1>
+        <p>Browse, search, and manage stored jobs.</p>
+    </header>
+    <div class="container-fluid px-0 mx-auto">
         <!-- Modal -->
         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
              aria-hidden="true">
@@ -71,7 +59,7 @@
         </div>
         <!-- Buttons -->
         <div class="row d-flex justify-content-end">
-            <div class="p-4">
+            <div class="p-2">
                 <button id="save-get-success" type="button" class="btn btn-secondary btn-success">Get all successful
                     jobs
                 </button>
