@@ -1,7 +1,7 @@
 """user auth fields for multi-user and TOTP
 
 Revision ID: a1b2c3d4e5f6
-Revises: 6870a5546912
+Revises: edf2272c0a9d
 Create Date: 2026-09-05 00:00:00.000000
 
 """
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 revision = 'a1b2c3d4e5f6'
-down_revision = '6870a5546912'
+down_revision = 'edf2272c0a9d'
 branch_labels = None
 depends_on = None
 

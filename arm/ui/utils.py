@@ -170,7 +170,19 @@ def arm_alembic_get():
     config = Config()
     config.set_main_option("script_location", mig_dir)
     script = ScriptDirectory.from_config(config)
-    head_revision = script.get_current_head()
+    heads = script.get_heads()
+    if len(heads) == 1:
+        head_revision = heads[0]
+    elif len(heads) > 1:
+        # Prefer a deterministic tip if branches exist; log loudly
+        head_revision = sorted(heads)[-1]
+        app.logger.error(
+            "Multiple Alembic heads %s — using %s. Add a merge revision.",
+            heads,
+            head_revision,
+        )
+    else:
+        head_revision = None
     app.logger.debug(f"Alembic Head is: {head_revision}")
     return head_revision
 
