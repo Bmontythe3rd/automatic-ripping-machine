@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Publish arm_wiki/ pages to the GitHub Wiki for this fork.
 # Prerequisites:
-#   1. On GitHub: repo Settings → Features → enable Wiki
-#   2. Create any first page in the web UI if .wiki.git still 404s
-#   3. Authenticated git / gh for Bmontythe3rd
+#   1. Wiki feature enabled (Settings → General → Features → Wikis) — already done for this fork
+#   2. One-time: open https://github.com/Bmontythe3rd/automatic-ripping-machine/wiki
+#      and click "Create the first page" (saves a blank Home). Until then .wiki.git 404s.
+#   3. Authenticated git for Bmontythe3rd (same credentials as `git push fork`)
 set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 WIKI_DIR="$(mktemp -d)"
