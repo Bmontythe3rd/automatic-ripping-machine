@@ -183,3 +183,4 @@ removed/*
 /installed
 
 arm.yaml
+.tools/
