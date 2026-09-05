@@ -276,6 +276,12 @@ function IsUserAnsweredYesToPrompt() {
 function IsEligibleDistro() {
   if ! IsDebianDistro; then
 
+    echo -e "${YELLOW}This bare-metal installer targets Debian 11/12 package layouts."
+    echo -e "For Ubuntu Server 22.04–26.04 (and other Linux servers), prefer Docker:${NC}"
+    echo -e "  sudo ./scripts/installers/prepare-host.sh"
+    echo -e "  See docs/host-compatibility.md"
+    echo ""
+
     NotDebian12Prompt="${YELLOW}WARNING, you are attempting to run this script in a environment other than Debian 11 or 12
 This script was tested exclusively on Debian 12 (Bookworm) and Debian 11 (Bullseye)
 Running it on another Linux distro may have unpredictable side effects.

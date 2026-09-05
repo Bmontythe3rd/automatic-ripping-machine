@@ -1,5 +1,9 @@
 # FAQ (fork)
 
+## Does this run on Ubuntu Server 26.04?
+
+Yes — use the **Docker Compose** path. Host prep: `sudo ./scripts/installers/prepare-host.sh`. See [Docker](Docker) and [`docs/host-compatibility.md`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docs/host-compatibility.md). The same path works on other modern Linux servers (OS-agnostic).
+
 ## Where is Discord?
 
 This fork’s Help page links to **GitHub** and the **wiki** only. Upstream Discord is not used here.

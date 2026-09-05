@@ -1,6 +1,10 @@
 # Docker Compose for Automatic Ripping Machine (fork)
 #
-# Quick start (UI on laptop):
+# Host OS: any modern Linux server with Docker (Ubuntu 22.04–26.04, Debian, etc.).
+# Prep once: sudo ./scripts/installers/prepare-host.sh
+# See docs/host-compatibility.md
+#
+# Quick start (UI on laptop or server):
 #   mkdir -p data/{home,config,logs,media,music}
 #   cp -n setup/arm.yaml setup/apprise.yaml data/config/
 #   cp -n setup/.abcde.conf data/config/abcde.conf

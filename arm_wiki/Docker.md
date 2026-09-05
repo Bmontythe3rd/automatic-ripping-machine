@@ -1,10 +1,26 @@
 # Docker (this fork)
 
-## UI-only laptop preview
+## Host OS (Ubuntu 26 and friends)
 
-Default [`docker-compose.yml`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docker-compose.yml) does **not** require `/dev/sr0`. Good for checking the web UI.
+This fork is **Linux-server OS agnostic** when run with Docker. The app lives in the container; the host only needs Docker Engine + Compose v2.
+
+Supported hosts include **Ubuntu Server 22.04, 24.04, and 26.04**, Debian 11+, and other systemd Linux servers. Details: [`docs/host-compatibility.md`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docs/host-compatibility.md).
+
+One-time host prep:
 
 ```bash
+sudo ./scripts/installers/prepare-host.sh
+```
+
+## UI-only laptop / server preview
+
+Default [`docker-compose.yml`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docker-compose.yml) does **not** require `/dev/sr0`.
+
+```bash
+mkdir -p data/{home,config,logs,media,music}
+cp -n setup/arm.yaml setup/apprise.yaml data/config/
+cp -n setup/.abcde.conf data/config/abcde.conf
+sudo chown -R "$(id -u):$(id -g)" data
 export ARM_UID=$(id -u) ARM_GID=$(id -g) ARM_HOME=$PWD/data
 docker compose up -d --build
 ```

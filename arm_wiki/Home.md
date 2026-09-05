@@ -2,6 +2,10 @@
 
 This wiki documents **[Bmontythe3rd/automatic-ripping-machine](https://github.com/Bmontythe3rd/automatic-ripping-machine)** — a stabilize-and-modernize fork of the upstream Automatic Ripping Machine.
 
+## Host compatibility
+
+**Docker is the supported, OS-agnostic path** — including **Ubuntu Server 26.04** and other modern Linux servers. See [Docker](Docker) and [`docs/host-compatibility.md`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docs/host-compatibility.md).
+
 ## What this fork improves
 
 - Reliable SQLite / job DB updates and empty-rip failure detection
@@ -16,6 +20,7 @@ This wiki documents **[Bmontythe3rd/automatic-ripping-machine](https://github.co
 ```bash
 git clone https://github.com/Bmontythe3rd/automatic-ripping-machine.git
 cd automatic-ripping-machine
+sudo ./scripts/installers/prepare-host.sh   # once per host (Ubuntu 26, Debian, …)
 mkdir -p data/{home,config,logs,media,music}
 cp -n setup/arm.yaml setup/apprise.yaml data/config/
 cp -n setup/.abcde.conf data/config/abcde.conf

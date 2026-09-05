@@ -57,21 +57,22 @@ See: https://b3n.org/automatic-ripping-machine
 
 ## Requirements
 
-- A system capable of running Docker containers
-- One or more optical drives to rip Blu-rays, DVDs, and CDs
+- A Linux server (or PC) that can run **Docker Engine + Compose v2**
+  - Includes **Ubuntu Server 22.04 / 24.04 / 26.04**, Debian, and other modern Linux servers
+  - See [`docs/host-compatibility.md`](docs/host-compatibility.md)
+- One or more optical drives to rip Blu-rays, DVDs, and CDs (for real ripping)
 - Lots of drive space (I suggest using a NAS) to store your movies
 
 
 ## Install
 
-[For normal installation please see the wiki](https://github.com/automatic-ripping-machine/automatic-ripping-machine/wiki/).
+**This fork (recommended):** [Wiki — Docker](https://github.com/Bmontythe3rd/automatic-ripping-machine/wiki/Docker)  
+Host prep: `sudo ./scripts/installers/prepare-host.sh`
 
-[For docker installation please see here](https://github.com/automatic-ripping-machine/automatic-ripping-machine/wiki/docker).
-
-[For WSL Integration please see here]()
+Upstream docs (for reference): [upstream wiki](https://github.com/automatic-ripping-machine/automatic-ripping-machine/wiki/).
 
 ## Troubleshooting
- [Please see the wiki for troubleshooting](https://github.com/automatic-ripping-machine/automatic-ripping-machine/wiki/).
+See [this fork’s wiki](https://github.com/Bmontythe3rd/automatic-ripping-machine/wiki) and [`docs/host-compatibility.md`](docs/host-compatibility.md).
 
 ## Contributing
 

@@ -6,7 +6,7 @@
 
 ### Start here
 - [Home](Home)
-- [Docker](Docker)
+- [Docker](Docker) (Ubuntu 26 / Linux-server agnostic)
 - [Bare-Metal](Bare-Metal)
 
 ### Operations
