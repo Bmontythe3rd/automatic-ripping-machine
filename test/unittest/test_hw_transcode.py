@@ -1,4 +1,5 @@
 """Tests for hardware transcode preset selection."""
+import importlib.util
 import os
 import sys
 import unittest
@@ -6,8 +7,6 @@ from unittest.mock import patch
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, ROOT)
-
-import importlib.util
 
 SPEC = importlib.util.spec_from_file_location(
     "hw_transcode",

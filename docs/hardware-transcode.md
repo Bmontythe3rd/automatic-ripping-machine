@@ -25,10 +25,19 @@ When auto is on: **NVIDIA → Intel → AMD → software**.
 
 ## Docker + NVIDIA (most common miss)
 
-Host drivers alone are not enough. The **container** must receive the GPU:
+Host drivers alone are not enough. The **container** must receive the GPU.
+Easiest path — include NVIDIA in the Compose wizard:
 
 ```bash
-# After nvidia-smi works on the host and Container Toolkit is installed:
+./scripts/installers/setup-arm.sh
+# choose NVIDIA when prompted; optionally install the Container Toolkit
+docker compose up -d --build
+```
+
+Or manually after `nvidia-smi` works and the Container Toolkit is installed:
+
+```bash
+sudo ./scripts/installers/install-nvidia-toolkit.sh
 docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d
 ```
 
@@ -44,15 +53,16 @@ Also confirm UI **System Info** shows NVIDIA as available.
 
 ### Intel QuickSync / AMD VCN
 
+`setup-arm.sh` can add `/dev/dri` for you. Manual equivalent:
+
 ```yaml
-# under services.arm in docker-compose.yml
+# under services.arm in docker-compose.yml (or override.yml)
 devices:
   - /dev/dri:/dev/dri
 group_add:
   - video
   - render
 ```
-
 ## GTX 980 (Maxwell) note
 
 Upstream HandBrake docs often recommend Pascal (1050+) or newer for NVENC. A GTX 980 can still expose NVENC; if H.265 NVENC fails at encode time, set software presets or a HandBrake build/preset that uses `nvenc_h264`. First confirm the container sees the GPU (steps above).

@@ -67,7 +67,8 @@ See: https://b3n.org/automatic-ripping-machine
 ## Install
 
 **This fork (recommended):** [Wiki — Docker](https://github.com/Bmontythe3rd/automatic-ripping-machine/wiki/Docker)  
-Host prep: `sudo ./scripts/installers/prepare-host.sh`
+Host prep: `sudo ./scripts/installers/prepare-host.sh`  
+Compose wizard: `./scripts/installers/setup-arm.sh`
 
 Upstream docs (for reference): [upstream wiki](https://github.com/automatic-ripping-machine/automatic-ripping-machine/wiki/).
 

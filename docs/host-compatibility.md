@@ -16,7 +16,15 @@ That makes the recommended path **Linux-server OS agnostic**: Ubuntu 22.04 / 24.
 
 ```bash
 sudo ./scripts/installers/prepare-host.sh
-# then from the clone:
+# guided: media location, GPU, optical drives, optional SMB/NFS
+./scripts/installers/setup-arm.sh
+docker compose up -d --build
+```
+
+Or the manual equivalent:
+
+```bash
+sudo ./scripts/installers/prepare-host.sh
 mkdir -p data/{home,config,logs,media,music}
 cp -n setup/arm.yaml setup/apprise.yaml data/config/
 cp -n setup/.abcde.conf data/config/abcde.conf
@@ -26,6 +34,7 @@ docker compose up -d --build
 ```
 
 `prepare-host.sh` installs Docker via [get.docker.com](https://get.docker.com) (multi-distro) and does **not** hard-code an Ubuntu release.
+`setup-arm.sh` writes gitignored `.env` + `docker-compose.override.yml` (and secure SMB credentials when used).
 
 ## Support matrix
 

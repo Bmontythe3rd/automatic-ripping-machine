@@ -3,6 +3,9 @@
 # - Optional NAS mount under /mnt (NFS, CIFS/SMB, or existing path)
 # - Writes docker-compose.nas.yml so media/music land on the NAS
 # - Prints SFTP tips for pulling completed rips
+#
+# Prefer the full Compose wizard (media + GPU + optical + SMB) instead:
+#   ./scripts/installers/setup-arm.sh
 set -euo pipefail
 
 RED='\033[1;31m'

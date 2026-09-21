@@ -160,15 +160,15 @@ optical_hint() {
   fi
 }
 
-offer_storage_setup() {
+offer_compose_setup() {
   echo
-  echo -e "${GREEN}Optional: map a NAS under /mnt and generate docker-compose.nas.yml${NC}"
-  echo "  (media/music on NAS; config/logs stay local)"
+  echo -e "${GREEN}Optional: run the Compose setup wizard${NC}"
+  echo "  (media location, GPU, optical drives, optional SMB/NFS + secure credentials)"
   local reply
-  read -r -p "Run storage/NAS configurator now? [y/N]: " reply || true
+  read -r -p "Run setup-arm.sh wizard now? [y/N]: " reply || true
   if [[ "${reply}" =~ ^[Yy]$ ]]; then
     local script
-    script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/configure-storage.sh"
+    script="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/setup-arm.sh"
     if [[ -x "${script}" ]]; then
       # Drop privileges to invoking user for compose file writes when possible
       if [[ -n "${SUDO_USER:-}" && "${SUDO_USER}" != "root" ]]; then
@@ -177,11 +177,12 @@ offer_storage_setup() {
         bash "${script}"
       fi
     else
-      echo -e "${YELLOW}configure-storage.sh not found/executable at ${script}${NC}"
+      echo -e "${YELLOW}setup-arm.sh not found/executable at ${script}${NC}"
     fi
   else
     echo "You can run it later:"
-    echo "  ./scripts/installers/configure-storage.sh"
+    echo "  ./scripts/installers/setup-arm.sh"
+    echo "Storage only: ./scripts/installers/configure-storage.sh"
   fi
 }
 
@@ -199,7 +200,11 @@ Next (as your normal user, from the repo clone):
   export ARM_UID=\$(id -u) ARM_GID=\$(id -g) ARM_HOME=\$PWD/data
   docker compose up -d --build
 
-NAS media mapping (optional):
+Compose wizard (media + GPU + optical + optional SMB/NFS):
+  ./scripts/installers/setup-arm.sh
+  docker compose up -d --build
+
+Storage only (NAS remap):
   ./scripts/installers/configure-storage.sh
   docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
 
@@ -220,5 +225,5 @@ ensure_docker
 maybe_create_arm_user
 add_invoking_user_to_docker
 optical_hint
-offer_storage_setup
+offer_compose_setup
 print_next_steps
