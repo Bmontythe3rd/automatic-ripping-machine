@@ -10,11 +10,22 @@ One-time host prep:
 
 ```bash
 sudo ./scripts/installers/prepare-host.sh
+./scripts/installers/setup-arm.sh   # media, GPU, optical, optional SMB/NFS
+docker compose up -d --build
 ```
 
 ## UI-only laptop / server preview
 
 Default [`docker-compose.yml`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docker-compose.yml) does **not** require `/dev/sr0`.
+
+Guided path (recommended):
+
+```bash
+./scripts/installers/setup-arm.sh
+docker compose up -d --build
+```
+
+Manual path:
 
 ```bash
 mkdir -p data/{home,config,logs,media,music}
@@ -51,16 +62,19 @@ Always `--build` after dependency or Dockerfile changes (e.g. `pyotp` for 2FA).
 The UI STORAGE card shows **container** paths from `arm.yaml` (`/home/arm/media/...`).
 That is normal — remap the **host** Docker bind (often under `/mnt`), do not change those yaml paths.
 
-Map a NAS under `/mnt` and generate `docker-compose.nas.yml`:
+Map a NAS under `/mnt` (and optionally GPU/optical) with the Compose wizard:
 
 ```bash
-./scripts/installers/configure-storage.sh
-docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
+./scripts/installers/setup-arm.sh
+docker compose up -d --build
 docker inspect arm-rippers --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}'
 ```
 
-Expect `/mnt/... -> /home/arm/media` (not `<repo>/data/media`).
+Storage-only alternative: `./scripts/installers/configure-storage.sh` then
+`docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d`.
 
+Expect `/mnt/... -> /home/arm/media` (not `<repo>/data/media`).
+SMB credentials are stored in `/etc/arm-nas-credentials` (mode 600), not in the repo.
 Pull completed rips from another PC:
 
 ```bash
@@ -72,7 +86,8 @@ Details: [`docs/storage-and-sftp.md`](https://github.com/Bmontythe3rd/automatic-
 
 ## Optical drives (real ripping)
 
-Uncomment in compose:
+`setup-arm.sh` can detect `/dev/sr*` and write them into `docker-compose.override.yml`.
+Manual equivalent — uncomment in compose:
 
 ```yaml
 devices:

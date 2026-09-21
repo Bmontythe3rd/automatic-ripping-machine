@@ -1,13 +1,15 @@
 # Example NAS overlay for ARM media/music
 #
 # Copy to docker-compose.nas.yml and edit host paths, or generate with:
-#   ./scripts/installers/configure-storage.sh
+#   ./scripts/installers/setup-arm.sh
+#   # or storage-only: ./scripts/installers/configure-storage.sh
 #
 # Keep arm.yaml TRANSCODE_PATH / COMPLETED_PATH as /home/arm/media/...
 # Remap the host side only.
 #
 # Start:
-#   docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
+#   docker compose up -d
+#   # or: docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
 #
 # Verify:
 #   docker inspect arm-rippers --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}'

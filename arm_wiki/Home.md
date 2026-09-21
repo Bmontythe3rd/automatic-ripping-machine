@@ -21,11 +21,7 @@ This wiki documents **[Bmontythe3rd/automatic-ripping-machine](https://github.co
 git clone https://github.com/Bmontythe3rd/automatic-ripping-machine.git
 cd automatic-ripping-machine
 sudo ./scripts/installers/prepare-host.sh   # once per host (Ubuntu 26, Debian, …)
-mkdir -p data/{home,config,logs,media,music}
-cp -n setup/arm.yaml setup/apprise.yaml data/config/
-cp -n setup/.abcde.conf data/config/abcde.conf
-sudo chown -R "$(id -u):$(id -g)" data
-export ARM_UID=$(id -u) ARM_GID=$(id -g) ARM_HOME=$PWD/data
+./scripts/installers/setup-arm.sh           # media, GPU, optical, optional SMB/NFS
 docker compose up -d --build
 ```
 

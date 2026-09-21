@@ -19,7 +19,7 @@ Where bits actually land on the server is the Docker **volume bind Source**:
 | `<repo>/data/media` → `/home/arm/media` | `/mnt/arm-media` → `/home/arm/media` |
 
 **Do not** edit `arm.yaml` to point at `/mnt/...`. Remap the host side of the
-volume (this doc + `configure-storage.sh`). Keep container paths as
+volume (this doc + `setup-arm.sh` / `configure-storage.sh`). Keep container paths as
 `/home/arm/media/...`.
 
 The STORAGE card labels:
@@ -65,17 +65,27 @@ docker exec arm-rippers printenv ARM_HOST_MEDIA ARM_HOST_MUSIC
 
 ## Point Completed / Transcode at a NAS (host remap)
 
-Interactive configurator (NFS, CIFS/SMB, or an already-mounted `/mnt/...` path):
+**Recommended:** the full Compose wizard (media + GPU + optical + SMB/NFS):
+
+```bash
+./scripts/installers/setup-arm.sh
+docker compose up -d --build
+```
+
+It writes gitignored `.env` and `docker-compose.override.yml`, and for SMB/CIFS
+stores credentials in `/etc/arm-nas-credentials` with mode `600`.
+
+Storage-only configurator (NFS, CIFS/SMB, or an already-mounted `/mnt/...` path):
 
 ```bash
 ./scripts/installers/configure-storage.sh
 ```
 
-It will:
+Either will:
 
 1. Mount the NAS under `/mnt/...` (optional; can also use an existing mount)
 2. Create `completed`, `raw`, and `transcode` under that mount
-3. Write **`docker-compose.nas.yml`** so only **media** and **music** use the NAS  
+3. Write **`docker-compose.nas.yml`** / override so only **media** and **music** use the NAS  
    (config/logs/home stay on local disk)
 4. Set `ARM_HOST_MEDIA` / `ARM_HOST_MUSIC` so the UI can show **Host:** paths
 
@@ -84,12 +94,16 @@ Reference overlay (tracked example): [`docker-compose.nas.example.yml`](../docke
 Start ARM with the NAS overlay (recreate so mounts apply):
 
 ```bash
+docker compose up -d
+# or explicitly:
 docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
 ```
 
-With NVIDIA + NAS:
+With NVIDIA + NAS (wizard embeds NVIDIA in override.yml when selected):
 
 ```bash
+docker compose up -d
+# or manually:
 docker compose -f docker-compose.yml -f docker-compose.nvidia.yml -f docker-compose.nas.yml up -d
 ```
 
@@ -102,7 +116,7 @@ docker inspect arm-rippers --format '{{range .Mounts}}{{println .Source "->" .De
 You want `/home/arm/media` sourced from your `/mnt/...` path, not `<repo>/data/media`.
 After refresh, STORAGE should show **Host:** `/mnt/.../transcode` and `/mnt/.../completed`.
 
-`prepare-host.sh` will also offer to run this configurator at the end of host prep.
+`prepare-host.sh` will also offer to run `setup-arm.sh` at the end of host prep.
 
 ## SFTP as the `arm` user
 

@@ -16,9 +16,13 @@ You do **not** configure `nvidia` / `intel` / `amd` in YAML. ARM probes HandBrak
 
 ## Docker + NVIDIA (required for detection)
 
-Host drivers are not enough — pass the GPU into the container:
+Host drivers are not enough — pass the GPU into the container.
+Easiest: `./scripts/installers/setup-arm.sh` and choose NVIDIA (optionally installs the Container Toolkit).
+
+Manual:
 
 ```bash
+sudo ./scripts/installers/install-nvidia-toolkit.sh
 docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d
 ```
 
@@ -33,7 +37,7 @@ Expect: `nvenc: version … is available`. System Info should then show NVIDIA a
 
 ## Intel / AMD
 
-Pass `/dev/dri` and add `video` / `render` groups — see [`docs/hardware-transcode.md`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docs/hardware-transcode.md).
+`setup-arm.sh` can add `/dev/dri`. Or pass `/dev/dri` and add `video` / `render` groups — see [`docs/hardware-transcode.md`](https://github.com/Bmontythe3rd/automatic-ripping-machine/blob/main/docs/hardware-transcode.md).
 
 ## GTX 980
 

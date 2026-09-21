@@ -2,6 +2,9 @@
 #
 # Host OS: any modern Linux server with Docker (Ubuntu 22.04–26.04, Debian, etc.).
 # Prep once: sudo ./scripts/installers/prepare-host.sh
+# Guided Compose setup (media, GPU, optical, SMB/NFS):
+#   ./scripts/installers/setup-arm.sh
+#   docker compose up -d --build
 # See docs/host-compatibility.md
 #
 # Quick start (UI on laptop or server):
@@ -13,13 +16,15 @@
 #   docker compose up -d --build
 #   open http://localhost:8080  (admin / password)
 #
-# For real ripping, uncomment the devices: and udev volume lines below.
+# For real ripping, uncomment the devices: and udev volume lines below
+# (or let setup-arm.sh write docker-compose.override.yml).
 # For NVIDIA HW encode (auto-detect; no vendor key in arm.yaml):
 #   docker compose -f docker-compose.yml -f docker-compose.nvidia.yml up -d
 #   See docs/hardware-transcode.md
 # For NAS media/music under /mnt (generates docker-compose.nas.yml):
-#   ./scripts/installers/configure-storage.sh
-#   docker compose -f docker-compose.yml -f docker-compose.nas.yml up -d
+#   ./scripts/installers/setup-arm.sh
+#   # or storage-only: ./scripts/installers/configure-storage.sh
+#   docker compose up -d   # override.yml / nas.yml applied as generated
 #   docker inspect arm-rippers --format '{{range .Mounts}}{{println .Source "->" .Destination}}{{end}}'
 #   UI still shows /home/arm/media/... (container paths); Host: comes from the bind.
 #   See docs/storage-and-sftp.md and docker-compose.nas.example.yml
