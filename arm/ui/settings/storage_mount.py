@@ -93,7 +93,7 @@ def host_path_from_mountinfo(
         if len(parts) < 10:
             continue
         try:
-            sep = parts.index("-")
+            parts.index("-")
         except ValueError:
             continue
         root = parts[3]

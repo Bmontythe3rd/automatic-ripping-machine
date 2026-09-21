@@ -16,7 +16,6 @@ Covers
 """
 import platform
 import importlib
-import re
 import subprocess
 from datetime import datetime
 import os
@@ -30,7 +29,6 @@ from flask import render_template, request, flash, \
 from arm.ui.auth_utils import admin_required
 
 import arm.ui.utils as ui_utils
-from arm.ripper.ProcessHandler import arm_subprocess
 from arm.ui import app, db
 from arm.models.job import Job
 from arm.models.system_drives import SystemDrives

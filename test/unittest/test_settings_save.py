@@ -1,4 +1,5 @@
 """Unit tests for arm.ui.settings_save (no Flask app required)."""
+import importlib.util
 import os
 import sys
 import unittest
@@ -7,8 +8,6 @@ ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../.."))
 sys.path.insert(0, ROOT)
 
 # Load module directly to avoid arm.ui Flask import side effects
-import importlib.util
-
 SPEC = importlib.util.spec_from_file_location(
     "settings_save",
     os.path.join(ROOT, "arm/ui/settings_save.py"),
